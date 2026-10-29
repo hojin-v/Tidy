@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.winubun" path="/org/gnome/shell/extensions/winubun/">
+    <key name="top-edge-enabled" type="b"><default>true</default><summary>Enable top layout picker</summary></key>
+    <key name="snap-assist" type="b"><default>false</default><summary>Offer other windows after snapping</summary></key>
+    <key name="resize-together" type="b"><default>true</default><summary>Resize adjacent tiled windows together</summary></key>
+    <key name="super-key-picker" type="b"><default>true</default><summary>Show the top layout picker alongside the native overview</summary></key>
+    <key name="disable-native-tiling-shortcuts" type="b"><default>false</default><summary>Disable GNOME Super+arrow tiling shortcuts while Tidy is active</summary></key>
+    <key name="trigger-height" type="i"><range min="24" max="200"/><default>96</default><summary>Top activation area in logical pixels</summary></key>
+    <key name="trigger-width" type="i"><range min="120" max="800"/><default>320</default><summary>Centered top activation width in logical pixels</summary></key>
+    <key name="trigger-delay" type="i"><range min="0" max="1000"/><default>150</default><summary>Activation dwell in milliseconds</summary></key>
+    <key name="window-gap" type="i"><range min="0" max="40"/><default>8</default><summary>Gap between windows in logical pixels</summary></key>
+    <key name="picker-scale" type="i"><range min="50" max="200"/><default>100</default><summary>Layout picker size as a percentage</summary></key>
+    <key name="auto-picker-scale" type="b"><default>true</default><summary>Automatically adapt picker size to each monitor</summary></key>
+    <key name="overview-picker-scale" type="i"><range min="50" max="200"/><default>100</default><summary>Overview picker size relative to the normal picker; 100 percent means equal sizes</summary></key>
+    <key name="settings-backup" type="s"><default>'[]'</default><summary>Recovery journal for temporarily overridden desktop settings</summary></key>
+    <key name="snap-left" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;Left']</default></key>
+    <key name="snap-right" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;Right']</default></key>
+    <key name="snap-toggle-maximize" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;Return']</default></key>
+    <key name="snap-top" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;Up']</default></key>
+    <key name="snap-bottom" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;Down']</default></key>
+    <key name="snap-top-left" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;u']</default></key>
+    <key name="snap-top-right" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;i']</default></key>
+    <key name="snap-bottom-left" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;j']</default></key>
+    <key name="snap-bottom-right" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;k']</default></key>
+    <key name="snap-left-third" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;d']</default></key>
+    <key name="snap-center-third" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;f']</default></key>
+    <key name="snap-right-third" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;g']</default></key>
+    <key name="snap-left-two-thirds" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;e']</default></key>
+    <key name="snap-right-two-thirds" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;t']</default></key>
+    <key name="snap-center" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;c']</default></key>
+    <key name="show-layouts" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;space']</default></key>
+    <key name="next-monitor" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;n']</default></key>
+  </schema>
+</schemalist>

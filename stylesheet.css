@@ -1,0 +1,28 @@
+.winubun-palette {
+    background-color: rgba(27, 27, 27, 0.98);
+    color: #f3f3f3;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+}
+.winubun-cards { spacing: 12px; }
+.winubun-card { spacing: 8px; }
+.winubun-zone { background-color: #393939; border: 1px solid #595959; border-radius: 5px; padding: 0; transition-duration: 120ms; }
+.winubun-zone:hover, .winubun-zone:focus, .winubun-zone:selected {
+    background-color: #aaaaaa; border-color: #d2d2d2;
+    box-shadow: 0 0 8px rgba(190, 190, 190, 0.20);
+}
+.winubun-preview { background-color: rgba(180, 180, 180, 0.10); border: 2px solid rgba(220, 220, 220, 0.40); border-radius: 12px; }
+.winubun-dialog .modal-dialog { background-color: #1b1b1b; border-radius: 24px; padding: 28px; }
+.winubun-dialog .modal-dialog-content-box { spacing: 20px; }
+.wintiling-assist-region {
+    background-color: rgba(27, 27, 27, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 16px;
+}
+.wintiling-assist-grid, .wintiling-assist-row { spacing: 12px; }
+.wintiling-assist-app { border-radius: 14px; padding: 10px; transition-duration: 120ms; }
+.wintiling-assist-app:hover, .wintiling-assist-app:focus {
+    background-color: rgba(255, 255, 255, 0.16);
+}

@@ -1,0 +1,23 @@
+{
+  "name": "tidy",
+  "version": "0.13.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check": "python3 scripts/check.py",
+    "test:shell": "python3 scripts/test-shell.py",
+    "build": "python3 scripts/manage.py build",
+    "install-extension": "python3 scripts/manage.py install",
+    "uninstall-extension": "python3 scripts/manage.py uninstall"
+  },
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/hojin-v/Tidy.git"
+  },
+  "homepage": "https://github.com/hojin-v/Tidy#readme",
+  "bugs": {
+    "url": "https://github.com/hojin-v/Tidy/issues"
+  }
+}
