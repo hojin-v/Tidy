@@ -217,8 +217,8 @@ export default class Tidy extends Extension {
                         this._place(window, zone, window.get_monitor(), zones);
                 }, 180);
             }));
-        } else if (action === 'left' || action === 'right') {
-            const target = this._tiler.horizontalTarget(window, action);
+        } else if (['left', 'right', 'top', 'bottom'].includes(action)) {
+            const target = this._tiler.directionalTarget(window, action);
             this._place(window, target.zone, target.monitor, [target.zone, ...companionZones(target.zone)], {wrap: target.wrap});
         } else {
             this._place(window, action, window.get_monitor(), [action, ...companionZones(action)]);

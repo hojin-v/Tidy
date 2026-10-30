@@ -31,7 +31,7 @@ The interface follows your desktop language. Korean and English are supported; o
 | Edge snapping | Other top edges maximize; left and right edges tile halves. |
 | Overview integration | Press Super to open GNOME's overview and the picker together, then drag a window preview onto a layout. |
 | Custom shortcuts | Use Super+Alt for halves, quarters, thirds and two-thirds; customize the bindings in settings. |
-| Multiple monitors | Repeat a horizontal shortcut to move to the monitor in that direction. Picker size adapts to each monitor. |
+| Multiple monitors | Repeat an arrow shortcut to move to the monitor in that direction, including above and below. Picker size adapts to each monitor. |
 | Linked resizing | Drag shared boundaries to resize adjacent tiled windows together. Enabled by default. |
 | Optional snap assist | Choose running app icons inside empty regions to fill the remaining space. Disabled by default. |
 | Size and spacing | Adjust picker sizes and window gaps, including a separate overview picker size. |
@@ -107,7 +107,7 @@ Placement shortcuts consistently use **Super+Alt**. Change them in the **Shortcu
 | Super | Open / close GNOME's overview and the layout picker |
 | Super + A | Toggle GNOME's application grid |
 | Super + Alt + ← / → | Tile to the left / right half; repeat to move in that direction, wrapping at the outer edges |
-| Super + Alt + ↑ / ↓ | Tile to the top / bottom half |
+| Super + Alt + ↑ / ↓ | Tile to the top / bottom half; repeat to move above / below, wrapping at the outer edges |
 | Super + Alt + Enter | Maximize / restore the previous size and placement |
 | Super + Alt + U / I / J / K | Top-left / top-right / bottom-left / bottom-right quarter |
 | Super + Alt + D / F / G | Left / center / right third |
@@ -117,6 +117,8 @@ Placement shortcuts consistently use **Super+Alt**. Change them in the **Shortcu
 | Super + Alt + N | Move to the next monitor |
 
 From the left half of the leftmost monitor, **Super+Alt+←** wraps to the right half of the rightmost monitor. From the right half of the rightmost monitor, **Super+Alt+→** wraps to the left half of the leftmost monitor. The window slides out through one outer edge and enters through the opposite edge. A single monitor does not wrap.
+
+From a top half, repeat **Super+Alt+↑** to enter the upper monitor's bottom half. From a bottom half, repeat **Super+Alt+↓** to enter the lower monitor's top half. At the topmost or bottommost edge, movement wraps to the opposite outer edge with the same sliding motion.
 
 ## Settings
 

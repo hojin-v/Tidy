@@ -10,6 +10,7 @@ import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import {testSharedResize} from './sharedResize-smoke.js';
 import {testWindowAnimations} from './windowAnimations-smoke.js';
 import {testWrapAnimations} from './wrapAnimations-smoke.js';
+import {testVerticalNavigation} from './verticalNavigation-smoke.js';
 import {testOverviewDrag} from './overviewDrag-smoke.js';
 import {testOverviewDrop} from './overviewDrop-smoke.js';
 import {testOverviewTransition} from './overviewTransition-smoke.js';
@@ -146,6 +147,7 @@ export async function run() {
     };
     await testWindowAnimations(extension, window, assert);
     await testWrapAnimations(extension, window, assert);
+    await testVerticalNavigation(extension, window, assert, chord);
     const mutterKeys = new Gio.Settings({schema_id: 'org.gnome.mutter.keybindings'});
     const wmKeys = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.keybindings'});
     const nativeLeft = mutterKeys.get_value('toggle-tiled-left');

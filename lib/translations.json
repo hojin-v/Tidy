@@ -31,7 +31,7 @@
     "Restore default shortcuts": "단축키 기본값 복원",
     "Restore defaults": "기본값 복원",
     "Usage": "사용 안내",
-    "Super + Alt + Arrow: tile to that half\nRepeat Left or Right to move to the monitor in that direction; outer edges wrap to the opposite monitor\nSuper + Alt + Enter: maximize / restore previous layout\nSuper + Alt + Space: layout picker\nSuper + Alt + N: next monitor\n\nUbuntu Tiling Assistant may conflict with tiling and shortcuts. The installer disables it and restores its original state on uninstall.\nApp minimum window sizes may prevent an exact fit.": "Super + Alt + 방향키: 해당 방향 절반 배치\n좌우를 한 번 더 누르면 해당 방향 모니터로 이동 · 양 끝에서는 반대쪽 끝으로 순환\nSuper + Alt + Enter: 최대화 / 이전 배치 복원\nSuper + Alt + Space: 배치 선택기\nSuper + Alt + N: 다음 모니터\n\nUbuntu Tiling Assistant와 동시에 사용하면 배치 및 단축키가 충돌할 수 있습니다. 설치 도구가 기존 확장을 중지하고 제거 시 원래 상태를 복원합니다.\n앱이 요구하는 최소 창 크기보다 작은 칸에는 정확히 맞지 않을 수 있습니다.",
+    "Super + Alt + Arrow: tile to that half\nRepeat an arrow to move to the monitor in that direction; outer edges wrap to the opposite monitor\nSuper + Alt + Enter: maximize / restore previous layout\nSuper + Alt + Space: layout picker\nSuper + Alt + N: next monitor\n\nUbuntu Tiling Assistant may conflict with tiling and shortcuts. The installer disables it and restores its original state on uninstall.\nApp minimum window sizes may prevent an exact fit.": "Super + Alt + 방향키: 해당 방향 절반 배치\n같은 방향키를 한 번 더 누르면 해당 방향 모니터로 이동 · 상하좌우 끝에서는 반대쪽 끝으로 순환\nSuper + Alt + Enter: 최대화 / 이전 배치 복원\nSuper + Alt + Space: 배치 선택기\nSuper + Alt + N: 다음 모니터\n\nUbuntu Tiling Assistant와 동시에 사용하면 배치 및 단축키가 충돌할 수 있습니다. 설치 도구가 기존 확장을 중지하고 제거 시 원래 상태를 복원합니다.\n앱이 요구하는 최소 창 크기보다 작은 칸에는 정확히 맞지 않을 수 있습니다.",
     "Set shortcut": "단축키 지정",
     "Press your new key combination": "원하는 키 조합을 눌러주세요",
     "Backspace to clear · Esc to cancel": "Backspace로 해제 · Esc로 취소",
@@ -113,6 +113,8 @@
     "The bundled extension is missing. Reinstall @hnode/tidy, or run npm run build from the source checkout.": "확장 설치 파일이 없습니다. @hnode/tidy를 다시 설치하거나 소스 폴더에서 npm run build를 실행하세요.",
     "Tidy was interrupted.": "Tidy 실행이 중단되었습니다.",
     "The bundled extension does not match this installer. Download Tidy again.": "확장 설치 파일과 설치 도구의 버전이 다릅니다. Tidy를 다시 다운로드하세요.",
-    "Install a prebuilt extension ZIP without writing to the package directory": "패키지 폴더에 파일을 쓰지 않고 미리 빌드한 확장 ZIP으로 설치합니다."
+    "Install a prebuilt extension ZIP without writing to the package directory": "패키지 폴더에 파일을 쓰지 않고 미리 빌드한 확장 ZIP으로 설치합니다.",
+    "Top half / upper monitor": "위쪽 절반 / 위쪽 모니터",
+    "Bottom half / lower monitor": "아래쪽 절반 / 아래쪽 모니터"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@hnode/tidy",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Window tiling for Ubuntu GNOME with a top layout picker, custom shortcuts and multi-monitor support",
   "type": "module",
   "bin": {

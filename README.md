@@ -107,7 +107,7 @@ Git 대신 [Download ZIP](https://github.com/hojin-v/Tidy/archive/refs/heads/mai
 | Super | 기존 창·앱 보기와 배치 선택기 열기 / 닫기 |
 | Super + A | GNOME 앱 목록 전환 |
 | Super + Alt + ← / → | 왼쪽 / 오른쪽 절반 배치. 같은 방향 반복 시 다음 모니터로 이동하며 양 끝에서는 반대편 끝으로 순환 |
-| Super + Alt + ↑ / ↓ | 위쪽 / 아래쪽 절반 배치 |
+| Super + Alt + ↑ / ↓ | 위쪽 / 아래쪽 절반 배치. 같은 방향 반복 시 위·아래 모니터로 이동하며 양 끝에서는 반대편 끝으로 순환 |
 | Super + Alt + Enter | 최대화 / 이전 크기·배치로 복귀 |
 | Super + Alt + U / I / J / K | 왼쪽 위 / 오른쪽 위 / 왼쪽 아래 / 오른쪽 아래 ¼ |
 | Super + Alt + D / F / G | 왼쪽 / 가운데 / 오른쪽 ⅓ |
@@ -117,6 +117,8 @@ Git 대신 [Download ZIP](https://github.com/hojin-v/Tidy/archive/refs/heads/mai
 | Super + Alt + N | 다음 모니터로 이동 |
 
 가장 왼쪽 모니터의 왼쪽 절반에서 **Super+Alt+←**를 누르면 가장 오른쪽 모니터의 오른쪽 절반으로 이동합니다. 가장 오른쪽의 오른쪽 절반에서 **Super+Alt+→**를 누르면 가장 왼쪽의 왼쪽 절반으로 이동합니다. 순환할 때는 창이 가장자리로 나갔다가 반대쪽에서 들어오는 모션을 사용합니다. 모니터가 하나면 순환하지 않습니다.
+
+위쪽 절반에서 **Super+Alt+↑**를 한 번 더 누르면 위 모니터의 아래쪽 절반으로 이동하고, 아래쪽 절반에서 **Super+Alt+↓**를 한 번 더 누르면 아래 모니터의 위쪽 절반으로 이동합니다. 맨 위·맨 아래에서도 반대편 끝으로 순환합니다.
 
 ## Settings
 
