@@ -47,7 +47,7 @@ export default class Tidy extends Extension {
             if (target) {
                 const area = Main.layoutManager.getWorkAreaForMonitor(this._superPicker.monitor);
                 this._palette.showPreview(zoneRect(area, target.zone, target.zone === 'maximize' ? 0 : this._settings.get_int('window-gap')));
-            } else this._palette.preview.hide();
+            } else this._palette.hidePreview();
         });
         this._lease.set('org.gnome.mutter', 'edge-tiling', new GLib.Variant('b', false));
         for (const [schema, key, owned] of [
@@ -310,7 +310,7 @@ export default class Tidy extends Extension {
             this._drag.selected = this._palette.hit(x, y);
         } else if (intent?.type === 'tile') {
             if (picker) this._palette.peek(monitor, {scale: this._pickerScale(monitor), width});
-            else this._palette.hide();
+            else this._palette.hidePicker();
             this._drag.enteredAt = 0;
             this._drag.selected = {zone: intent.zone, zones: [intent.zone, ...companionZones(intent.zone)]};
         } else if (intent?.type === 'picker') {
@@ -327,7 +327,7 @@ export default class Tidy extends Extension {
             this._drag.enteredAt = 0;
             if (!this._palette.contains(x, y, 16)) {
                 if (picker) this._palette.peek(monitor, {scale: this._pickerScale(monitor), width});
-                else this._palette.hide();
+                else this._palette.hidePicker();
             }
         }
         if (this._palette.isOpen && (intent?.type === 'picker' || this._palette.contains(x, y, 16))) {
@@ -341,7 +341,7 @@ export default class Tidy extends Extension {
             this._palette.showPreview(zoneRect(area, this._drag.selected.zone,
                 this._drag.selected.zone === 'maximize' ? 0 : this._settings.get_int('window-gap')));
         } else {
-            this._palette.preview.hide();
+            this._palette.hidePreview();
         }
     }
 
