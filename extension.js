@@ -96,14 +96,14 @@ export default class Tidy extends Extension {
             this._palette.clearSelection();
         });
         this._connect(Main.overview, 'window-drag-begin', (_overview, window) => {
-            if (this._superPicker) this._overviewDrag.beginWindow(window);
+            this._overviewDrag.beginWindow(window);
         });
         this._connect(Main.overview, 'window-drag-end', () => {
             this._overviewDrag.end();
             this._palette.clearSelection();
         });
         this._connect(Main.overview, 'item-drag-begin', (_overview, source) => {
-            if (this._superPicker) this._overviewDrag.beginItem(source);
+            if (Main.overview.visible) this._overviewDrag.beginItem(source);
         });
         this._connect(Main.overview, 'item-drag-end', () => this._overviewDrag.end());
         this._connect(Main.overview, 'hidden', () => {
@@ -535,9 +535,9 @@ export default class Tidy extends Extension {
 
     _closeSuperPicker() {
         this._clearOverviewDrop();
+        this._overviewDrag.end();
         if (!this._superPicker) return;
         this._palette.disableWindowDrops();
-        this._overviewDrag.end();
         const {parent, index} = this._superPicker;
         this._superPicker = null;
         // Keep the overview geometry stable until its exit animation finishes.

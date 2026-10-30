@@ -92,6 +92,8 @@ All runtime tools are copied into the installation. **You can delete the downloa
 
 Press **Super** to open the native window/app overview and the layout picker together. Drag a window preview into a cell, or click a cell to place the previously focused window. Search appears when you type.
 
+Window previews and app icons shrink as soon as you start dragging anywhere in the overview, and return to their original size on release or cancellation. This also works with the overview picker disabled. Dropping a window into a layout continues directly from the miniature to its final placement.
+
 With snap assist enabled, select an app icon in an empty region to tile its window there. Click the current window or another area, or press Esc, to finish without any additional placements.
 
 The picker slides down using Ubuntu Dock's animation duration and curve. Leaving the selection area restores the window's size; dropping onto a cell animates directly from the miniature to its destination.

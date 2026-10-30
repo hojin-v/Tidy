@@ -9,14 +9,30 @@ export async function testOverviewTransition(extension, [focused, dragged], asse
     const native = source._draggable;
     const savedActor = native._dragActor;
     const savedOpacity = native._dragOrigOpacity;
+    const pointerFields = ['_dragX', '_dragY', '_dragOffsetX', '_dragOffsetY'];
+    const pointerValues = pointerFields.map(key => native[key]);
     source._onDragBegin();
     const proxy = source.getDragActor();
     Main.uiGroup.add_child(proxy);
     proxy.opacity = 100;
     native._dragActor = proxy;
     native._dragOrigOpacity = 255;
+    const [sx, sy] = source.window_container.get_transformed_position();
+    proxy.set_position(sx, sy);
+    native._dragX = sx + proxy.width * 0.6;
+    native._dragY = sy + 20;
+    native._dragOffsetX = -proxy.width * 0.6;
+    native._dragOffsetY = -20;
+    await Scripting.sleep(350);
+    const [mx, my] = proxy.get_transformed_position();
+    const [mw, mh] = proxy.get_transformed_size();
+    assert(proxy.scale_x < 1 && mw > 0 && mh > 0, 'overview drag is already miniature before entering a layout cell');
     const cell = extension._palette._targets.find(target => target.zone === 'right');
     assert(cell.button._delegate.acceptDrop(source), 'native thumbnail drop accepts a continuous transition');
+    const miniature = extension._overviewTransition.entry.source;
+    assert(Math.abs(miniature.x - mx) < 1 && Math.abs(miniature.y - my) < 1 &&
+        Math.abs(miniature.width - mw) < 1 && Math.abs(miniature.height - mh) < 1,
+        'layout handoff starts at the miniature size and location without expanding back to the full thumbnail');
     assert(native._dragOrigOpacity === 0 && extension._overviewTransition.entry,
         'accepted native drops hide the snap-back proxy while retaining the live transition');
     // Reproduce Shell's restore-on-success timeline. Physical pointer gestures
@@ -31,6 +47,7 @@ export async function testOverviewTransition(extension, [focused, dragged], asse
         'accepted drops release native DND promptly without the 750 ms snap-back');
     await Scripting.sleep(600);
     native._dragOrigOpacity = savedOpacity;
+    pointerFields.forEach((key, i) => { native[key] = pointerValues[i]; });
     assert((!dragged._delegate || dragged._delegate.opacity === 255) && dragged.get_compositor_private().opacity === 255 &&
         !extension._overviewTransition.entry,
         'native drop handoff releases its preview and restores live surface opacity');

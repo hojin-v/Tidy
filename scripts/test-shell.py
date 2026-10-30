@@ -18,7 +18,7 @@ with tempfile.TemporaryDirectory(prefix='winubun-runtime-') as runtime:
         '--extension', str(root / 'dist/winubun@winubun.local.shell-extension.zip'),
         str(root / 'tests/shell-smoke.js')], cwd=root, env=env, start_new_session=True)
     try:
-        result = process.wait(timeout=70)
+        result = process.wait(timeout=90)
         if result:
             raise SystemExit(result)
     finally:
