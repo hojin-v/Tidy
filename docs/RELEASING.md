@@ -13,7 +13,7 @@ npm run check
 npm run test:package
 npm pack --dry-run
 npm pack --pack-destination dist
-node tests/npm-package-smoke.js dist/hnode-tidy-0.18.0.tgz
+node tests/npm-package-smoke.js dist/hnode-tidy-0.18.1.tgz
 ```
 
 `prepack`이 최신 소스로 확장 ZIP을 다시 빌드합니다. 공개 파일은 `package.json`의 `files` 목록으로 제한합니다. 로그, 테스트, `.npmrc`, 캐시가 포함되지 않는지 확인하세요. npm 패키지 설치 자체는 데스크톱 설정을 바꾸지 않으며 `postinstall`은 사용하지 않습니다.
@@ -33,7 +33,7 @@ node tests/npm-package-smoke.js dist/hnode-tidy-0.18.0.tgz
 ```bash
 npm login --registry=https://registry.npmjs.org/
 npm whoami --registry=https://registry.npmjs.org/
-npm publish ./dist/hnode-tidy-0.18.0.tgz --access public --tag latest
+npm publish ./dist/hnode-tidy-0.18.1.tgz --access public --tag latest
 npm view @hnode/tidy version dist-tags --json
 ```
 

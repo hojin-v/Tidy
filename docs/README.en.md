@@ -98,7 +98,7 @@ With snap assist enabled, select an app icon in an empty region to tile its wind
 
 The picker slides down using Ubuntu Dock's animation duration and curve. Leaving the selection area restores the window's size; dropping onto a cell animates directly from the miniature to its destination.
 
-Placement previews use a dark outline, a subtle translucent fill and a soft shadow. They remain stable while you hold a window at a side or top edge.
+Placement previews share the picker's charcoal and gray theme, with a soft outline, subtle translucent fill and gentle shadow. They remain stable while you hold a window at a side or top edge.
 
 ## Shortcuts
 
