@@ -7,6 +7,11 @@
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
 }
 .winubun-cards { spacing: 12px; }
+.tidy-drag-hint {
+    background-color: rgba(55, 55, 55, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 0 0 8px 8px;
+}
 .winubun-card { spacing: 8px; }
 .winubun-zone { background-color: #393939; border: 1px solid #595959; border-radius: 5px; padding: 0; transition-duration: 120ms; }
 .winubun-zone:hover, .winubun-zone:focus, .winubun-zone:selected {

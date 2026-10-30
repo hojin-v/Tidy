@@ -10,7 +10,7 @@ root = Path(__file__).resolve().parent.parent
 metadata = json.loads((root / 'metadata.json').read_text())
 schema = ET.parse(root / 'schemas/org.gnome.shell.extensions.winubun.gschema.xml').getroot()[0]
 assert metadata['settings-schema'] == schema.attrib['id']
-for path in [*root.glob('*.js'), *(root / 'lib').glob('*.js'), *(root / 'scripts').glob('*.js'), *(root / 'tests').glob('*.js')]:
+for path in [*root.glob('*.js'), *(root / 'bin').glob('*.js'), *(root / 'lib').glob('*.js'), *(root / 'scripts').glob('*.js'), *(root / 'tests').glob('*.js')]:
     subprocess.run(['node', '--check', str(path)], check=True)
 with tempfile.TemporaryDirectory() as directory:
     subprocess.run(['glib-compile-schemas', '--strict', '--targetdir', directory, str(root / 'schemas')], check=True)
@@ -27,4 +27,5 @@ assert keys['disable-native-tiling-shortcuts'].findtext('default') == 'false'
 assert keys['picker-scale'].findtext('default') == '100'
 assert keys['overview-picker-scale'].findtext('default') == '100'
 assert keys['auto-picker-scale'].findtext('default') == 'true'
+assert keys['auto-trigger-width'].findtext('default') == 'true'
 print('JavaScript 구문, GSettings 스키마, 단축키 기본값 검사 통과')

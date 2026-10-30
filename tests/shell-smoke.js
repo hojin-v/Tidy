@@ -9,6 +9,7 @@ import * as Scripting from 'resource:///org/gnome/shell/ui/scripting.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import {testSharedResize} from './sharedResize-smoke.js';
 import {testWindowAnimations} from './windowAnimations-smoke.js';
+import {testWrapAnimations} from './wrapAnimations-smoke.js';
 import {testOverviewDrag} from './overviewDrag-smoke.js';
 import {testOverviewDrop} from './overviewDrop-smoke.js';
 import {testOverviewTransition} from './overviewTransition-smoke.js';
@@ -68,6 +69,12 @@ export async function run() {
     assert(installedManager.query_exists(null) && extension.dir.get_child('scripts/i18n.py').query_exists(null) &&
         extension.dir.get_child('scripts/recover.js').query_exists(null),
         'installed package includes startup, preferences and recovery tools');
+    const npmInstaller = Gio.Subprocess.new(['node', root.get_child('bin/tidy.js').get_path(), 'install'],
+        Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE);
+    const [npmOutput, npmErrors] = await npmInstaller.communicate_utf8_async(null, null);
+    print(npmOutput);
+    assert(npmInstaller.get_successful() && extension._tiler && extension._palette,
+        `npm CLI installs its bundled ZIP in the isolated GNOME session (${npmErrors})`);
     const appLauncher = new Gio.SubprocessLauncher({flags: Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE});
     appLauncher.set_cwd(GLib.get_tmp_dir());
     for (const command of ['apply-update', 'launch']) {
@@ -138,6 +145,7 @@ export async function run() {
         await Scripting.sleep(400);
     };
     await testWindowAnimations(extension, window, assert);
+    await testWrapAnimations(extension, window, assert);
     const mutterKeys = new Gio.Settings({schema_id: 'org.gnome.mutter.keybindings'});
     const wmKeys = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.keybindings'});
     const nativeLeft = mutterKeys.get_value('toggle-tiled-left');
@@ -318,6 +326,9 @@ export async function run() {
     assert(!extension._palette.actor.visible && !extension._palette.preview.visible, 'leaving overview does not resurrect hidden drag UI');
     Main.overview.hide();
     extension._settings.set_boolean('super-key-picker', true);
+    // Overview tests finish in a left tile. Start from another layout so the
+    // first Left below tests a half snap rather than the new outer-edge wrap.
+    extension._tiler.apply(window, 'top', leftmost, {animate: false});
     window.activate(global.get_current_time());
     await Scripting.sleep(150);
     await chord(Clutter.KEY_Left);
@@ -345,7 +356,11 @@ export async function run() {
     await chord(Clutter.KEY_Right);
     const farRight = window.get_monitor();
     await chord(Clutter.KEY_Right);
-    assert(window.get_monitor() === farRight, 'right shortcut does not wrap when no right monitor exists');
+    assert(window.get_monitor() === beforeRepeat && extension._tiler._placements.get(window) === 'left',
+        'right shortcut at the outer right edge wraps to the leftmost monitor left half');
+    await chord(Clutter.KEY_Left);
+    assert(window.get_monitor() === farRight && extension._tiler._placements.get(window) === 'right',
+        'left shortcut at the outer left edge wraps to the rightmost monitor right half');
     await chord(Clutter.KEY_Left);
     await chord(Clutter.KEY_Left);
     assert(window.get_monitor() === beforeRepeat, 'repeated left shortcut returns to the physically left monitor');
@@ -379,12 +394,21 @@ export async function run() {
     await Scripting.sleep(250);
     const dragArea = Main.layoutManager.getWorkAreaForMonitor(window.get_monitor());
     const readPointer = global.get_pointer;
-    let position = [dragArea.x + dragArea.width / 2, dragArea.y + 48, 256];
+    let position = [dragArea.x + dragArea.width / 2, dragArea.y + dragArea.height / 2, 256];
     global.get_pointer = () => position;
     global.display.emit('grab-op-begin', window, Meta.GrabOp.MOVING);
     assert(extension._drag, 'move-grab signal starts tracking');
     await Scripting.sleep(350);
+    assert(extension._settings.get_boolean('auto-trigger-width') && extension._palette.hint.visible &&
+        !extension._palette.isOpen && Math.abs(extension._palette.hint.width - extension._palette.actor.width) <= 1 &&
+        extension._palette.hint.height <= 16 && extension._palette.hint.translation_y === 0,
+        'dragging shows a slim top hint matching the actual picker width by default');
+    position = [extension._palette.actor.x + extension._palette.actor.width - 24, dragArea.y + 48, 256];
+    await Scripting.sleep(500);
     assert(extension._palette.actor.visible, 'dragging inside external monitor top opens picker');
+    assert(extension._palette.isOpen && !extension._palette.hint.visible &&
+        extension._tiler._animations._running.get(window)?.shrinking,
+        'the outer picker cells activate beyond the old narrow strip and shrink the dragged window');
     const dropTarget = extension._palette._targets.find(item => item.zone === 'top-left');
     const [dropX, dropY] = dropTarget.button.get_transformed_position();
     const [dropWidth, dropHeight] = dropTarget.button.get_transformed_size();

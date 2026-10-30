@@ -2,11 +2,41 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
+import Clutter from 'gi://Clutter';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Scripting from 'resource:///org/gnome/shell/ui/scripting.js';
 
 export async function testPickerVisual(extension, assert) {
     const palette = extension._palette;
+    const schema = Gio.SettingsSchemaSource.get_default().lookup('org.gnome.shell.extensions.dash-to-dock', true);
+    const dock = schema?.has_key('animation-time') ? new Gio.Settings({settings_schema: schema}) : null;
+    const previousDockTime = dock?.get_double('animation-time');
+    try {
+        dock?.set_double('animation-time', 0.42);
+        const monitor = extension._superPicker.monitor;
+        const area = Main.layoutManager.getWorkAreaForMonitor(monitor);
+        palette.hide(true);
+        palette.show(monitor);
+        const start = palette.actor.translation_y;
+        const slide = palette.actor.get_transition('translation-y');
+        assert(start < -palette.actor.height && palette.actor.opacity === 255 &&
+            slide?.get_progress_mode() === Clutter.AnimationMode.EASE_OUT_QUAD &&
+            slide.get_duration() === (dock ? 420 : 300),
+            'picker slides from behind the top edge using the current Ubuntu Dock duration and curve');
+        await Scripting.sleep(90);
+        assert(palette.actor.translation_y > start && palette.actor.translation_y < 0 &&
+            !palette.contains(palette.actor.x + 20, area.y - 1),
+            'opening progresses across frames and clipped content above the work area cannot be selected');
+        palette.hide();
+        await Scripting.sleep(60);
+        const reversing = palette.actor.translation_y;
+        palette.show(monitor);
+        assert(Math.abs(palette.actor.translation_y - reversing) < 1,
+            'reversing an unfinished slide resumes at the visible position without a reset');
+        await Scripting.sleep(460);
+    } finally {
+        if (dock) dock.set_double('animation-time', previousDockTime);
+    }
     const normal = extension._settings.get_int('picker-scale');
     const overview = extension._settings.get_int('overview-picker-scale');
     extension._settings.set_int('overview-picker-scale', 100);

@@ -8,6 +8,7 @@
     <key name="disable-native-tiling-shortcuts" type="b"><default>false</default><summary>Disable GNOME Super+arrow tiling shortcuts while Tidy is active</summary></key>
     <key name="trigger-height" type="i"><range min="24" max="200"/><default>96</default><summary>Top activation area in logical pixels</summary></key>
     <key name="trigger-width" type="i"><range min="120" max="800"/><default>320</default><summary>Centered top activation width in logical pixels</summary></key>
+    <key name="auto-trigger-width" type="b"><default>true</default><summary>Match the top activation area and drag hint to the actual picker width</summary></key>
     <key name="trigger-delay" type="i"><range min="0" max="1000"/><default>150</default><summary>Activation dwell in milliseconds</summary></key>
     <key name="window-gap" type="i"><range min="0" max="40"/><default>8</default><summary>Gap between windows in logical pixels</summary></key>
     <key name="picker-scale" type="i"><range min="50" max="200"/><default>100</default><summary>Layout picker size as a percentage</summary></key>

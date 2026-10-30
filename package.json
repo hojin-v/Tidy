@@ -1,20 +1,51 @@
 {
-  "name": "tidy",
-  "version": "0.13.1",
-  "private": true,
+  "name": "@hnode/tidy",
+  "version": "0.15.1",
+  "description": "Window tiling for Ubuntu GNOME with a top layout picker, custom shortcuts and multi-monitor support",
   "type": "module",
+  "bin": {
+    "tidy": "bin/tidy.js"
+  },
+  "files": [
+    "bin/tidy.js",
+    "lib/i18nCore.js",
+    "lib/translations.json",
+    "metadata.json",
+    "scripts/manage.py",
+    "scripts/i18n.py",
+    "scripts/recover.js",
+    "dist/winubun@winubun.local.shell-extension.zip",
+    "docs/README.en.md",
+    "docs/DEVELOPMENT.md",
+    "docs/RELEASING.md",
+    "docs/preview.png",
+    "docs/assist-preview.png",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "os": ["linux"],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["gnome", "ubuntu", "tiling", "window-manager", "snap-layouts", "multi-monitor"],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "test": "node --test tests/*.test.js",
     "check": "python3 scripts/check.py",
     "test:shell": "python3 scripts/test-shell.py",
     "build": "python3 scripts/manage.py build",
+    "prepack": "/usr/bin/python3 scripts/manage.py build >&2",
+    "test:package": "node tests/npm-package-smoke.js",
     "install-extension": "python3 scripts/manage.py install",
     "uninstall-extension": "python3 scripts/manage.py uninstall"
   },
   "license": "GPL-3.0-or-later",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/hojin-v/Tidy.git"
+    "url": "git+https://github.com/hojin-v/Tidy.git"
   },
   "homepage": "https://github.com/hojin-v/Tidy#readme",
   "bugs": {

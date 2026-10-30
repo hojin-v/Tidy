@@ -121,12 +121,16 @@ def restore_competitors():
         path.unlink()
 
 
-def install():
+def install(archive=None):
     version = run('gnome-shell', '--version').stdout.split()[-1].split('.')[0]
     metadata = json.loads((ROOT / 'metadata.json').read_text())
     if version not in metadata['shell-version']:
         raise RuntimeError(_('GNOME {version} is not supported. Supported versions: 46–50', version=version))
-    archive = build()
+    archive = Path(archive) if archive is not None else build()
+    with zipfile.ZipFile(archive) as package:
+        bundled = json.loads(package.read('metadata.json'))
+        if any(bundled.get(key) != metadata.get(key) for key in ['uuid', 'version', 'shell-version']):
+            raise RuntimeError(_('The bundled extension does not match this installer. Download Tidy again.'))
     if DEST.is_symlink():
         raise RuntimeError(_('Manage symlink installations manually: {path}', path=DEST))
     # The session may need to discover a first installation at the next login.
@@ -226,8 +230,13 @@ def uninstall():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command', choices=['build', 'install', 'activate', 'uninstall', 'prefs', 'status', 'launch', 'apply-update'])
+    parser.add_argument('--archive', type=Path, help=_('Install a prebuilt extension ZIP without writing to the package directory'))
     args = parser.parse_args()
-    if args.command == 'apply-update':
+    if args.archive is not None and args.command != 'install':
+        parser.error('--archive requires install')
+    if args.command == 'install':
+        install(args.archive)
+    elif args.command == 'apply-update':
         apply_update()
     elif args.command == 'launch':
         activate()
@@ -244,7 +253,7 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except (subprocess.CalledProcessError, RuntimeError, OSError) as error:
+    except (subprocess.CalledProcessError, RuntimeError, OSError, zipfile.BadZipFile) as error:
         message = getattr(error, 'stderr', '') or str(error)
         print(message, file=sys.stderr)
         if len(sys.argv) > 1 and sys.argv[1] == 'launch':

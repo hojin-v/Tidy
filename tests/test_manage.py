@@ -1,5 +1,6 @@
 """Regression checks for updating a cached Shell extension without re-enabling old code."""
 import importlib.util
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -69,8 +70,20 @@ class UpdateTests(unittest.TestCase):
         self.assertFalse((manage.STATE / 'pending-update.json').exists())
         self.assertTrue(preserved.exists())
 
+    def test_mismatched_bundle_is_rejected_before_disabling_an_existing_installation(self):
+        with zipfile.ZipFile(self.archive, 'w') as archive:
+            archive.writestr('metadata.json', json.dumps(dict(self.metadata, version=1)))
+        with patch.object(manage, 'run', return_value=SimpleNamespace(stdout='GNOME Shell 50.1')), \
+             patch.object(manage, 'set_enabled') as enabled:
+            with self.assertRaisesRegex(RuntimeError, 'does not match'):
+                manage.install(self.archive)
+        enabled.assert_not_called()
+        self.assertFalse(manage.DEST.exists())
+
 
 class PortableInstallTests(unittest.TestCase):
+    bundled = False
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory(prefix='tidy-install-')
         self.addCleanup(self.directory.cleanup)
@@ -107,7 +120,22 @@ class PortableInstallTests(unittest.TestCase):
         # only Shell registration is stubbed to leave the user's session alone.
         with patch.object(manage, 'run', side_effect=run), \
              patch.object(manage, 'extension_info', return_value={}):
-            manage.install()
+            if self.bundled:
+                archive = manage.build()
+                inventory = lambda: {path.relative_to(self.source): hashlib.sha256(path.read_bytes()).digest()
+                    for path in self.source.rglob('*') if path.is_file()}
+                before = inventory()
+                self.source.chmod(0o555)
+                (self.source / 'schemas').chmod(0o555)
+                try:
+                    with patch.object(manage, 'build', side_effect=AssertionError('must use the bundled ZIP')):
+                        manage.install(archive)
+                    self.assertEqual(inventory(), before, 'npm installation must not write into its package')
+                finally:
+                    self.source.chmod(0o755)
+                    (self.source / 'schemas').chmod(0o755)
+            else:
+                manage.install()
         shutil.rmtree(self.source)
 
     def command(self, path):
@@ -147,6 +175,10 @@ class PortableInstallTests(unittest.TestCase):
         self.assertFalse((self.data / 'applications/winubun.desktop').exists())
         self.assertFalse(self.autostart.exists())
         self.assertFalse((self.state / 'pending-update.json').exists())
+
+
+class BundledInstallTests(PortableInstallTests):
+    bundled = True
 
 
 if __name__ == '__main__':

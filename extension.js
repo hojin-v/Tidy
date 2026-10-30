@@ -219,7 +219,7 @@ export default class Tidy extends Extension {
             }));
         } else if (action === 'left' || action === 'right') {
             const target = this._tiler.horizontalTarget(window, action);
-            this._place(window, target.zone, target.monitor, [target.zone, ...companionZones(target.zone)]);
+            this._place(window, target.zone, target.monitor, [target.zone, ...companionZones(target.zone)], {wrap: target.wrap});
         } else {
             this._place(window, action, window.get_monitor(), [action, ...companionZones(action)]);
         }
@@ -228,8 +228,10 @@ export default class Tidy extends Extension {
     _place(window, zone, monitor, zones, options = {}) {
         this._closeAssist();
         const serial = ++this._interactionSerial;
-        if (!window.get_compositor_private() || !this._tiler.apply(window, zone, monitor, options))
+        if (!window.get_compositor_private() || !this._tiler.apply(window, zone, monitor, options)) {
+            this._tiler._animations.restoreDrag(window, true);
             return;
+        }
         if (options.assist !== false) this._offerAssist(window, zone, monitor, zones, serial);
     }
 
@@ -261,7 +263,10 @@ export default class Tidy extends Extension {
         this._closeDialog();
         this._closeAssist();
         this._drag = {window, monitor: -1, enteredAt: 0, selected: null};
+        this._tiler._animations.finish(window);
         this._armEscape();
+        this._pollDrag();
+        if (!this._drag) return;
         this._pollId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 32, () => {
             this._pollDrag();
             return this._drag ? GLib.SOURCE_CONTINUE : GLib.SOURCE_REMOVE;
@@ -290,9 +295,13 @@ export default class Tidy extends Extension {
             this._drag.selected = null;
         }
         const area = Main.layoutManager.getWorkAreaForMonitor(monitor);
+        const picker = this._settings.get_boolean('top-edge-enabled');
+        const bounds = picker ? this._palette.prepare(monitor, {scale: this._pickerScale(monitor)}) : null;
+        const width = this._settings.get_boolean('auto-trigger-width') ? bounds?.width :
+            Math.min(this._settings.get_int('trigger-width'), area.width - 24);
         const intent = dragIntent(Main.layoutManager.monitors[monitor], area, x, y, {
-            height: this._settings.get_int('trigger-height'), width: this._settings.get_int('trigger-width'),
-            picker: this._settings.get_boolean('top-edge-enabled'),
+            height: this._settings.get_int('trigger-height'), width,
+            picker, center: area.x + area.width / 2,
         });
         this._drag.selected = null;
         // Once open, allow selecting every card, beyond the narrow activation
@@ -300,8 +309,8 @@ export default class Tidy extends Extension {
         if (this._palette.isOpen && this._palette.contains(x, y)) {
             this._drag.selected = this._palette.hit(x, y);
         } else if (intent?.type === 'tile') {
-            if (this._palette.isOpen)
-                this._palette.hide();
+            if (picker) this._palette.peek(monitor, {scale: this._pickerScale(monitor), width});
+            else this._palette.hide();
             this._drag.enteredAt = 0;
             this._drag.selected = {zone: intent.zone, zones: [intent.zone, ...companionZones(intent.zone)]};
         } else if (intent?.type === 'picker') {
@@ -310,13 +319,24 @@ export default class Tidy extends Extension {
                 this._drag.enteredAt = now;
             if (!this._palette.isOpen && now - this._drag.enteredAt >= this._settings.get_int('trigger-delay'))
                 this._palette.show(monitor, {scale: this._pickerScale(monitor)});
+            else if (!this._palette.isOpen)
+                this._palette.peek(monitor, {scale: this._pickerScale(monitor), width});
             if (this._palette.isOpen)
                 this._drag.selected = this._palette.hit(x, y);
         } else {
             this._drag.enteredAt = 0;
-            if (!this._palette.contains(x, y, 16))
-                this._palette.hide();
+            if (!this._palette.contains(x, y, 16)) {
+                if (picker) this._palette.peek(monitor, {scale: this._pickerScale(monitor), width});
+                else this._palette.hide();
+            }
         }
+        if (this._palette.isOpen && (intent?.type === 'picker' || this._palette.contains(x, y, 16))) {
+            this._tiler._animations.previewDrag(this._drag.window, x, y, area);
+            // The miniature must stay beneath the choices while still following
+            // the native grab. It never receives pointer or drop events.
+            const parent = this._palette.actor.get_parent();
+            parent.set_child_above_sibling(this._palette.actor, null);
+        } else this._tiler._animations.restoreDrag(this._drag.window);
         if (this._drag.selected) {
             this._palette.showPreview(zoneRect(area, this._drag.selected.zone,
                 this._drag.selected.zone === 'maximize' ? 0 : this._settings.get_int('window-gap')));
@@ -331,13 +351,14 @@ export default class Tidy extends Extension {
         // Sample once more so a release between timer ticks uses the actual cell.
         this._pollDrag(true);
         const drag = this._drag;
-        this._cancelDrag();
+        this._cancelDrag(false, Boolean(drag?.selected));
         if (drag?.selected) {
             const {zone, zones} = drag.selected;
             const serial = this._interactionSerial;
             this._later(() => {
                 if (serial === this._interactionSerial)
                     this._place(drag.window, zone, drag.monitor, zones);
+                else this._tiler._animations.restoreDrag(drag.window);
             });
         }
     }
@@ -536,7 +557,7 @@ export default class Tidy extends Extension {
             Main.wm.allowKeybinding(Meta.external_binding_name_for_action(this._escapeAction), Shell.ActionMode.ALL);
     }
 
-    _cancelDrag(immediate = false) {
+    _cancelDrag(immediate = false, keepPreview = false) {
         if (this._escapeAction) {
             Main.wm.allowKeybinding(Meta.external_binding_name_for_action(this._escapeAction), Shell.ActionMode.NONE);
             global.display.ungrab_accelerator(this._escapeAction);
@@ -546,6 +567,7 @@ export default class Tidy extends Extension {
             GLib.Source.remove(this._pollId);
             this._pollId = 0;
         }
+        if (this._drag && !keepPreview) this._tiler._animations.restoreDrag(this._drag.window, immediate);
         this._drag = null;
         this._palette?.hide(immediate);
     }

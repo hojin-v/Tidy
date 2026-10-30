@@ -10,6 +10,7 @@ Windows의 Snap Layouts와 macOS의 Magnet에서 익숙한 창 배치를 Ubuntu 
 ![GNOME](https://img.shields.io/badge/GNOME-46%E2%80%9350-4a86cf)
 ![Session](https://img.shields.io/badge/session-Wayland-555555)
 ![Languages](https://img.shields.io/badge/languages-KO%20%7C%20EN-555555)
+[![npm](https://img.shields.io/npm/v/@hnode/tidy)](https://www.npmjs.com/package/@hnode/tidy)
 [![License](https://img.shields.io/badge/license-GPL--3.0--or--later-green)](LICENSE)
 
 [Install](#install) · [Features](#features) · [Quick Start](#quick-start) · [Shortcuts](#shortcuts) · [Uninstall](#uninstall)
@@ -44,11 +45,32 @@ Tidy는 GNOME Shell에서 실행되는 창 배치 확장입니다. 여러 모니
 | X11 | 실기 검증 전 |
 | KDE · Xfce · Windows · macOS | 지원 대상 아님 |
 
-실행에는 시스템 Python 3와 PyGObject, GJS, GTK 4/libadwaita, `glib-compile-schemas`가 필요합니다. 설치 도구가 확장 패키지 생성과 설치를 처리하며, Node.js는 개발 검증에만 사용합니다.
+실행에는 시스템 Python 3와 PyGObject, GJS, GTK 4/libadwaita가 필요합니다. npm 명령에는 Node.js 18 이상이 필요하며, 소스에서 직접 빌드할 때는 `glib-compile-schemas`도 필요합니다. 설치된 GNOME 확장은 Node.js나 npm 프로세스를 띄우지 않습니다.
 
 ## Install
 
-저장소를 내려받아 설치합니다.
+### npm
+
+패키지 이름은 **`@hnode/tidy`**, 실행 명령은 **`tidy`**입니다. npm 공개 후 다음 명령으로 패키지와 GNOME 확장을 설치합니다.
+
+```bash
+npm install -g @hnode/tidy
+tidy install
+```
+
+전역 설치 없이 한 번의 명령으로 설치할 수도 있습니다.
+
+```bash
+npx @hnode/tidy@latest install
+```
+
+`tidy doctor`로 시스템 요구 사항을 확인하고, `tidy --help`로 명령 목록을 볼 수 있습니다. `tidy install`은 sudo 없이 현재 GNOME 사용자로 실행하세요. npm 패키지 설치만으로 데스크톱 설정이 바뀌지는 않습니다.
+
+**처음 설치하고 다시 로그인하면 자동으로 동작합니다. 매번 터미널에서 실행할 필요가 없습니다.** 설정은 앱 목록의 **Tidy**나 상단 격자 아이콘에서 열 수 있습니다.
+
+### Source
+
+저장소를 내려받아 직접 설치할 수도 있습니다.
 
 ```bash
 git clone https://github.com/hojin-v/Tidy.git
@@ -60,17 +82,19 @@ Git 대신 [Download ZIP](https://github.com/hojin-v/Tidy/archive/refs/heads/mai
 
 **최초 설치 후 로그아웃하고 다시 로그인하면 자동 활성화됩니다.** 이후 앱 목록의 **Tidy** 또는 상단 패널의 격자 아이콘에서 설정을 엽니다.
 
-설치에 필요한 도구도 설치 위치에 복사합니다. **설치가 완료되면 다운로드한 ZIP과 소스 폴더를 삭제해도 됩니다.** 첫 재로그인 전에 원본 폴더를 삭제해도 자동 적용됩니다.
+설치에 필요한 도구도 설치 위치에 복사합니다. **설치가 완료되면 다운로드한 ZIP과 소스 폴더, npm 캐시를 삭제해도 됩니다.** 첫 재로그인 전에 원본 폴더를 삭제해도 자동 적용됩니다.
 
 ## Quick Start
 
-1. 창의 제목 표시줄을 잡아 모니터 상단 중앙으로 끕니다.
-2. 선택기가 열리면 원하는 배치 칸으로 포인터를 옮깁니다.
+1. 창의 제목 표시줄을 잡으면 상단에 선택기 인식 영역이 얇게 나타납니다.
+2. 그 영역으로 끌면 선택기가 펼쳐지고 창이 작은 미리보기로 줄어듭니다. 원하는 배치 칸으로 포인터를 옮깁니다.
 3. 마우스를 놓으면 창을 배치합니다. 빈 곳에서 놓으면 취소합니다.
 
 **Super**를 누르면 기존 창·앱 보기와 배치 선택기가 함께 열립니다. 창 미리보기를 원하는 칸에 끌어 놓거나, 칸을 클릭해 원래 포커스된 창을 배치할 수 있습니다. 검색은 글자를 입력할 때 나타납니다.
 
 남은 공간의 창 선택 옵션을 켰다면 빈 영역의 앱 아이콘을 선택하세요. 현재 창이나 다른 영역을 클릭하거나 Esc를 누르면 추가 배치 없이 마칩니다.
+
+선택기는 Ubuntu Dock의 애니메이션 시간과 곡선을 따라 상단에서 미끄러져 나옵니다. 선택 영역을 벗어나면 창이 원래 크기로 돌아오며, 놓으면 작은 미리보기에서 배치 위치로 이어집니다.
 
 ## Shortcuts
 
@@ -80,7 +104,7 @@ Git 대신 [Download ZIP](https://github.com/hojin-v/Tidy/archive/refs/heads/mai
 | --- | --- |
 | Super | 기존 창·앱 보기와 배치 선택기 열기 / 닫기 |
 | Super + A | GNOME 앱 목록 전환 |
-| Super + Alt + ← / → | 왼쪽 / 오른쪽 절반 배치. 같은 방향 반복 시 해당 방향 모니터로 이동 |
+| Super + Alt + ← / → | 왼쪽 / 오른쪽 절반 배치. 같은 방향 반복 시 다음 모니터로 이동하며 양 끝에서는 반대편 끝으로 순환 |
 | Super + Alt + ↑ / ↓ | 위쪽 / 아래쪽 절반 배치 |
 | Super + Alt + Enter | 최대화 / 이전 크기·배치로 복귀 |
 | Super + Alt + U / I / J / K | 왼쪽 위 / 오른쪽 위 / 왼쪽 아래 / 오른쪽 아래 ¼ |
@@ -90,6 +114,8 @@ Git 대신 [Download ZIP](https://github.com/hojin-v/Tidy/archive/refs/heads/mai
 | Super + Alt + Space | 배치 선택기 열기 |
 | Super + Alt + N | 다음 모니터로 이동 |
 
+가장 왼쪽 모니터의 왼쪽 절반에서 **Super+Alt+←**를 누르면 가장 오른쪽 모니터의 오른쪽 절반으로 이동합니다. 가장 오른쪽의 오른쪽 절반에서 **Super+Alt+→**를 누르면 가장 왼쪽의 왼쪽 절반으로 이동합니다. 순환할 때는 창이 가장자리로 나갔다가 반대쪽에서 들어오는 모션을 사용합니다. 모니터가 하나면 순환하지 않습니다.
+
 ## Settings
 
 앱 목록의 **Tidy** 또는 **상단 격자 아이콘 → 설정 및 단축키…**에서 변경합니다. 설정은 즉시 반영됩니다.
@@ -97,9 +123,17 @@ Git 대신 [Download ZIP](https://github.com/hojin-v/Tidy/archive/refs/heads/mai
 - **기존 Super+방향키 창 배치 끄기**: GNOME 기본 배치 단축키를 끕니다. 해제하거나 Tidy를 종료하면 기존 단축키를 복원합니다.
 - **모니터에 맞춰 선택기 크기 자동 조절**: 내장 화면을 기준으로 큰 외장 모니터의 선택기를 적당히 키웁니다. 기본값은 켬입니다.
 - **배치 선택기 크기 / 창·앱 보기 선택기 크기**: 기본 크기는 같으며, 창·앱 보기의 크기를 별도로 조절할 수 있습니다.
+- **선택기 너비에 인식 범위 맞추기**: 기본값은 켬입니다. 모니터별 선택기 너비에 맞춰 인식 영역과 드래그 안내를 조절합니다. 끄면 기존 사용자 지정 너비를 사용합니다.
 - **남은 공간의 창 선택**: 배치 후 빈 영역에 앱 아이콘을 표시합니다. 기본값은 끔입니다.
 
-설치된 관리 도구로 설정이나 상태를 확인할 수도 있습니다. 원본 소스 폴더는 필요하지 않습니다.
+CLI에서도 설정이나 상태를 확인할 수 있습니다.
+
+```bash
+tidy prefs
+tidy status
+```
+
+CLI 없이 설치된 관리 도구를 직접 실행할 수도 있습니다. 원본 소스 폴더는 필요하지 않습니다.
 
 ```bash
 tidy_manager="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/winubun@winubun.local/scripts/manage.py"
@@ -109,7 +143,14 @@ tidy_manager="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/winubu
 
 ## Update
 
-새 소스를 받아 설치 명령을 다시 실행합니다. 기존 소스를 보관했다면 다음 명령을 사용할 수 있습니다.
+npm 패키지를 갱신한 뒤 확장에 적용합니다. `tidy update`는 현재 설치된 npm 패키지 버전을 적용합니다.
+
+```bash
+npm install -g @hnode/tidy@latest
+tidy update
+```
+
+전역 설치를 사용하지 않았다면 `npx @hnode/tidy@latest install`을 다시 실행하세요. 소스 설치는 새 소스를 받아 설치 명령을 다시 실행합니다.
 
 ```bash
 git pull --ff-only
@@ -120,7 +161,16 @@ git pull --ff-only
 
 ## Uninstall
 
-어느 폴더에서든 다음 명령으로 제거합니다.
+확장을 먼저 제거하고 npm CLI를 제거합니다.
+
+```bash
+tidy uninstall
+npm uninstall -g @hnode/tidy
+```
+
+npx로 설치했다면 `npx @hnode/tidy@latest uninstall`을 사용하세요. **npm 패키지만 제거해도 GNOME 확장은 계속 설치된 상태로 남습니다.**
+
+CLI가 없어도 어느 폴더에서든 설치된 도구로 제거할 수 있습니다.
 
 ```bash
 /usr/bin/python3 "${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/winubun@winubun.local/scripts/manage.py" uninstall
@@ -136,7 +186,7 @@ git pull --ff-only
 - 앱이 요구하는 최소 창 크기나 터미널의 크기 단위 때문에 작은 칸에 정확히 맞지 않을 수 있습니다. 전체 화면 앱과 이동·크기 변경을 허용하지 않는 창은 배치 대상에서 제외합니다.
 - 문제를 신고할 때는 GNOME 버전, Wayland/X11 여부, 모니터 배치와 재현 순서를 [Issues](https://github.com/hojin-v/Tidy/issues)에 남겨 주세요.
 
-개발 명령, 테스트 범위와 진단 경로는 [Development](docs/DEVELOPMENT.md)에서 확인할 수 있습니다.
+개발 명령, 테스트 범위와 진단 경로는 [Development](docs/DEVELOPMENT.md), npm 게시 절차는 [Releasing](docs/RELEASING.md)에서 확인할 수 있습니다.
 
 ## License
 

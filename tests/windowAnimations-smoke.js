@@ -98,6 +98,51 @@ export async function testWindowAnimations(extension, window, assert) {
         assert(window.maximized_horizontally && window.maximized_vertically &&
             sameRect(window.get_frame_rect(), full) && !animations._running.has(window),
             'a native boxed destination completes at the original maximized rectangle');
+        extension._tiler.restore(window);
+        window.unmaximize();
+        await Scripting.sleep(350);
+        animations.finishAll();
+        const dragStart = rectCopy(window.get_frame_rect());
+        const area = Main.layoutManager.getWorkAreaForMonitor(window.get_monitor());
+        animations.previewDrag(window, dragStart.x + dragStart.width * 0.7, dragStart.y + 16, area);
+        const miniature = animations._running.get(window);
+        assert(miniature?.drag && sameRect(window.get_frame_rect(), dragStart) && actor.opacity === 0 &&
+            miniature.clone.opacity === 255 && miniature.surface.source === actor,
+            'drag preview uses a live surface and keeps the actual window geometry unchanged');
+        await Scripting.sleep(350);
+        const [mw, mh] = miniature.clone.get_transformed_size();
+        assert(mw <= 281 && mh <= 181 && miniature.clone.scale_x === miniature.clone.scale_y,
+            'hovering layouts produces a small proportional window preview');
+        window.move_frame(true, dragStart.x + 60, dragStart.y + 30);
+        await Scripting.sleep(80);
+        assert(sameRect(miniature.clone, window.get_frame_rect()) && actor.opacity === 0,
+            'the miniature follows native movement without returning to a fixed drag origin');
+        animations.restoreDrag(window);
+        await Scripting.sleep(60);
+        const scale = miniature.clone.scale_x;
+        const current = window.get_frame_rect();
+        animations.previewDrag(window, current.x + current.width * 0.7, current.y + 16, area);
+        assert(animations._running.get(window) === miniature && Math.abs(miniature.clone.scale_x - scale) < 0.001,
+            'quickly reentering layouts reverses the same miniature without a visibility gap');
+        await Scripting.sleep(350);
+        const [dx, dy] = miniature.clone.get_transformed_position();
+        const [dw, dh] = miniature.clone.get_transformed_size();
+        extension._tiler.apply(window, 'left');
+        assert(animations._running.get(window) === miniature && !miniature.drag &&
+            sameRect(miniature.clone, {x: dx, y: dy, width: dw, height: dh}) && miniature.clone.scale_x === 1,
+            'dropping a miniature starts placement at its visible position and size without expanding first');
+        await Scripting.sleep(350);
+        const cancelled = rectCopy(window.get_frame_rect());
+        animations.previewDrag(window, cancelled.x + cancelled.width / 2, cancelled.y + 16, area);
+        await Scripting.sleep(100);
+        animations.restoreDrag(window);
+        await Scripting.sleep(350);
+        assert(!animations._running.has(window) && actor.opacity === 255 && sameRect(window.get_frame_rect(), cancelled),
+            'leaving or cancelling layouts restores the full window without applying a placement');
+        animations.previewDrag(window, cancelled.x + cancelled.width / 2, cancelled.y + 16, area);
+        extension._place(window, 'left', -1, ['left', 'right']);
+        assert(!animations._running.has(window) && actor.opacity === 255 && sameRect(window.get_frame_rect(), cancelled),
+            'a rejected drop restores the original surface instead of leaving an invisible window');
     } finally {
         global.stage.disconnect(observer);
         animations.finishAll();

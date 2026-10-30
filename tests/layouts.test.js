@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {ACTIONS, adjacentMonitor, companionZones, contains, dragIntent, LAYOUTS, monitorAt, ZONES, zoneRect} from '../lib/layouts.js';
+import {ACTIONS, adjacentMonitor, companionZones, contains, dragIntent, horizontalMonitor, LAYOUTS, monitorAt, ZONES, zoneRect} from '../lib/layouts.js';
 
 test('every layout partitions the whole screen without overlaps', () => {
     for (const layout of LAYOUTS) {
@@ -93,6 +93,17 @@ test('only the top center activates the picker; other top and side edges snap di
     assert.deepEqual(dragIntent(monitor, area, -2, 200, {picker: false}), {type: 'tile', zone: 'right'});
 });
 
+test('activation follows the rendered picker width and the work area center', () => {
+    const monitor = {x: 1600, y: -200, width: 1280, height: 900};
+    const area = {x: 1680, y: -168, width: 1200, height: 868};
+    const center = area.x + area.width / 2;
+    assert.deepEqual(dragIntent(monitor, area, center + 490, area.y + 48, {width: 1000}), {type: 'picker'});
+    assert.equal(dragIntent(monitor, area, center + 510, area.y + 48, {width: 1000}), null);
+    assert.deepEqual(dragIntent(monitor, area, center + 510, monitor.y + 2, {width: 1000}),
+        {type: 'tile', zone: 'maximize'});
+    assert.equal(dragIntent(monitor, area, center + 210, area.y + 48, {width: 400}), null);
+});
+
 test('directional monitor movement uses physical positions rather than index or wrapping', () => {
     const monitors = [
         {x: 1920, y: 100, width: 1440, height: 900},
@@ -105,6 +116,27 @@ test('directional monitor movement uses physical positions rather than index or 
     assert.equal(adjacentMonitor(monitors, 0, 'right'), -1);
     assert.equal(adjacentMonitor(monitors, 2, 'left'), -1);
     assert.equal(adjacentMonitor([monitors[1]], 0, 'right'), -1);
+});
+
+test('horizontal movement wraps from the outer edge to the opposite physical monitor', () => {
+    const monitors = [
+        {x: 1920, y: 100, width: 1440, height: 900},
+        {x: 0, y: 0, width: 1920, height: 1080},
+        {x: -1280, y: 300, width: 1280, height: 1024},
+    ];
+    assert.deepEqual(horizontalMonitor(monitors, 1, 'right'), {monitor: 0, wrapped: false});
+    assert.deepEqual(horizontalMonitor(monitors, 1, 'left'), {monitor: 2, wrapped: false});
+    assert.deepEqual(horizontalMonitor(monitors, 0, 'right'), {monitor: 2, wrapped: true});
+    assert.deepEqual(horizontalMonitor(monitors, 2, 'left'), {monitor: 0, wrapped: true});
+});
+
+test('horizontal wrapping skips a single monitor, vertical stacks and invalid directions', () => {
+    const single = [{x: -500, y: 0, width: 1000, height: 800}];
+    assert.equal(horizontalMonitor(single, 0, 'left'), null);
+    assert.equal(horizontalMonitor(single, 0, 'right'), null);
+    assert.equal(horizontalMonitor([...single, {...single[0], y: -800}], 0, 'right'), null);
+    assert.equal(horizontalMonitor(single, 0, 'up'), null);
+    assert.equal(horizontalMonitor(single, 3, 'left'), null);
 });
 
 test('hit testing excludes the right and bottom boundaries', () => {
