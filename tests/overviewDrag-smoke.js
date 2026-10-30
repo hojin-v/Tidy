@@ -104,6 +104,15 @@ export async function testOverviewDrag(extension, windows, assert) {
         .filter(item => item.app && item.mapped && item._draggable).slice(0, 2);
     assert(icons.length === 2, 'native app grid provides two actual draggable application icons');
     for (const [index, icon] of icons.entries()) await exercise(icon, 'app icon', {success: index === 1});
+    const scaleAndFade = icons[1].scaleAndFade;
+    try {
+        // A disabled animation has already hidden/scaled the source before
+        // the extension sees drag-begin. It must still return to full opacity.
+        icons[1].scaleAndFade = function () { this.opacity = 0; this.set_scale(0.5, 0.5); };
+        await exercise(icons[1], 'app icon', {quick: true});
+    } finally {
+        icons[1].scaleAndFade = scaleAndFade;
+    }
     Main.overview.dash.showAppsButton.checked = false;
     await Scripting.sleep(350);
 }
