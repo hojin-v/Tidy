@@ -33,7 +33,7 @@ node tests/npm-package-smoke.js dist/hnode-tidy-0.15.1.tgz
 ```bash
 npm login --registry=https://registry.npmjs.org/
 npm whoami --registry=https://registry.npmjs.org/
-npm publish dist/hnode-tidy-0.15.1.tgz --access public --tag latest
+npm publish ./dist/hnode-tidy-0.15.1.tgz --access public --tag latest
 npm view @hnode/tidy version dist-tags --json
 ```
 
