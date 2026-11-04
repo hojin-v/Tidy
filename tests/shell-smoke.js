@@ -17,6 +17,8 @@ import {testOverviewDrop} from './overviewDrop-smoke.js';
 import {testOverviewTransition} from './overviewTransition-smoke.js';
 import {testPickerVisual} from './pickerVisual-smoke.js';
 import {testAssistPicker} from './assistPicker-smoke.js';
+import {testMaximizeHover} from './maximizeHover-smoke.js';
+import {testBraveHover} from './braveHover-smoke.js';
 import {_} from '../lib/i18n.js';
 
 Gio._promisify(Gio.Subprocess.prototype, 'communicate_utf8_async', 'communicate_utf8_finish');
@@ -51,8 +53,25 @@ export async function run() {
     const record = Main.extensionManager.lookup('winubun@winubun.local');
     assert(extension?._tiler && !record.error, `extension enabled (${record.error ?? 'no error'})`);
     assert(extension._bindings.length === 17, 'all 17 Super+Alt keybindings registered');
+    const initialPalette = extension._palette;
+    const initialSignalCount = extension._signals.length;
+    extension.enable();
+    assert(extension._palette === initialPalette && extension._signals.length === initialSignalCount,
+        'repeated enable preserves the existing picker and signal connections');
     assert(!extension._palette.actor.visible && !extension._palette.preview.visible, 'transient drag UI starts hidden');
     assert(!extension._settings.get_boolean('snap-assist'), 'snap assist defaults to off');
+    Main.extensionManager.disableExtension(record.uuid);
+    await Scripting.sleep(250);
+    for (let attempt = 0; attempt < 3; attempt++) {
+        Main.extensionManager.enableExtension(record.uuid);
+        Main.extensionManager.disableExtension(record.uuid);
+        await Scripting.sleep(250);
+        assert(record.state === 2 && !record.enabled && !extension._settings && !extension._palette,
+            'rapid enable followed by disable leaves Tidy inactive without picker or settings leases');
+    }
+    Main.extensionManager.enableExtension(record.uuid);
+    await Scripting.sleep(250);
+    assert(record.state === 1 && extension._bindings.length === 17, 'Tidy activates normally after rapid toggles');
     const root = Gio.File.new_for_uri(import.meta.url).get_parent().get_parent();
     const launcher = new Gio.SubprocessLauncher({flags: Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE});
     launcher.setenv('GSETTINGS_BACKEND', 'memory', true);
@@ -150,6 +169,8 @@ export async function run() {
     await testWrapAnimations(extension, window, assert);
     await testVerticalNavigation(extension, window, assert, chord);
     await testEdgePreview(extension, window, assert);
+    await testMaximizeHover(extension, assert);
+    await testBraveHover(extension, assert);
     const mutterKeys = new Gio.Settings({schema_id: 'org.gnome.mutter.keybindings'});
     const wmKeys = new Gio.Settings({schema_id: 'org.gnome.desktop.wm.keybindings'});
     const nativeLeft = mutterKeys.get_value('toggle-tiled-left');
@@ -253,14 +274,24 @@ export async function run() {
     // mouse events; the key events and resulting native windows are real.
     assert(extension._onCapturedEvent({type: () => Clutter.EventType.BUTTON_PRESS, get_coords: () => [0, 400]}) === Clutter.EVENT_PROPAGATE,
         'clicks outside the palette pass to native overview windows and apps');
+    const dockUuid = 'ubuntu-dock@ubuntu.com';
+    const testDock = GLib.getenv('TIDY_TEST_UBUNTU_DOCK') === '1';
+    if (testDock) {
+        const oldButton = Main.overview.dash.showAppsButton;
+        assert(Main.extensionManager.enableExtension(dockUuid), 'Ubuntu Dock is available for the dash replacement regression');
+        await Scripting.sleep(800);
+        assert(Main.overview.dash.showAppsButton !== oldButton,
+            'Ubuntu Dock replaces the app grid button after Tidy has already started');
+    }
     press(Clutter.KEY_Super_L, Clutter.KeyState.PRESSED);
     await Scripting.sleep(30);
     press(Clutter.KEY_a, Clutter.KeyState.PRESSED);
     press(Clutter.KEY_a, Clutter.KeyState.RELEASED);
     press(Clutter.KEY_Super_L, Clutter.KeyState.RELEASED);
     await Scripting.sleep(500);
-    assert(Main.overview.dash.showAppsButton.checked && extension._palette.actor.mapped,
-        'Super+A switches to the native application grid with the picker still visible');
+    assert(Main.overview.dash.showAppsButton.checked && !extension._superPicker && !extension._palette.actor.visible &&
+        Main.overview._overview.controls._searchEntryBin.margin_top === originalSearchMargin,
+        'Super+A hides the picker, drop targets and extra search spacing in the native application grid');
     press(Clutter.KEY_b, Clutter.KeyState.PRESSED);
     press(Clutter.KEY_b, Clutter.KeyState.RELEASED);
     await Scripting.sleep(300);
@@ -269,8 +300,21 @@ export async function run() {
     press(Clutter.KEY_Escape, Clutter.KeyState.PRESSED);
     press(Clutter.KEY_Escape, Clutter.KeyState.RELEASED);
     await Scripting.sleep(300);
-    assert(search.get_text() === '' && extension._superPicker, 'Escape clears native search without dismissing the picker alone');
-    assert(search.opacity === 0, 'clearing search hides the empty field again');
+    assert(search.get_text() === '' && !extension._superPicker, 'Escape clears application search without showing a layout picker');
+    assert(search.opacity === originalSearchOpacity, 'application grid retains its native search field');
+    press(Clutter.KEY_Super_L, Clutter.KeyState.PRESSED);
+    press(Clutter.KEY_a, Clutter.KeyState.PRESSED);
+    press(Clutter.KEY_a, Clutter.KeyState.RELEASED);
+    press(Clutter.KEY_Super_L, Clutter.KeyState.RELEASED);
+    await Scripting.sleep(500);
+    assert(!Main.overview.dash.showAppsButton.checked && extension._superPicker && extension._palette.actor.mapped,
+        'returning from applications to window overview restores the one-row picker');
+    if (testDock) {
+        Main.extensionManager.disableExtension(dockUuid);
+        await Scripting.sleep(800);
+        assert(extension._superPicker && extension._palette.actor.mapped,
+            'restoring the original dash keeps the window overview picker working');
+    }
     Main.activateWindow(windows[1]);
     await Scripting.sleep(500);
     assert(!Main.overview.visible && !extension._superPicker, 'native window activation closes overview and picker together');
@@ -537,6 +581,7 @@ export async function run() {
     assert(extension._tiler._animations._running.size > 0, 'window movement animates through a live compositor surface');
     const backup = JSON.parse(extension._settings.get_string('settings-backup'));
     assert(backup.length === 5, 'edge behavior and conflicting workspace/overview shortcuts journaled');
+    extension.disable();
     extension.disable();
     await Scripting.sleep(700);
     assert(!extension._pollId && !extension._sources.size, 'disable removes timers and drag polling');

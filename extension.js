@@ -18,6 +18,8 @@ import {SharedResize} from './lib/sharedResize.js';
 import {OverviewTransition} from './lib/overviewTransition.js';
 import {OverviewDrag} from './lib/overviewDrag.js';
 import {DisplayConfig} from './lib/displayConfig.js';
+import {migratePickerSize} from './lib/pickerGeometry.js';
+import {MaximizeHover} from './lib/maximizeHover.js';
 
 export default class Tidy extends Extension {
     openPreferences() {
@@ -25,7 +27,11 @@ export default class Tidy extends Extension {
     }
 
     enable() {
+        // Shell may rebase extensions while a settings change is still being
+        // processed. Never replace resources belonging to an active instance.
+        if (this._settings || Main.extensionManager.lookup(this.uuid)?.enabled === false) return;
         this._settings = this.getSettings();
+        migratePickerSize(this._settings);
         this._interactionSerial = 0;
         this._sources = new Set();
         this._signals = [];
@@ -49,6 +55,15 @@ export default class Tidy extends Extension {
                 this._palette.showPreview(zoneRect(area, target.zone, target.zone === 'maximize' ? 0 : this._settings.get_int('window-gap')));
             } else this._palette.hidePreview();
         });
+        this._hoverPalette = new DragPalette((zone, zones) => this._maximizeHover?.select(zone, zones), target => {
+            const active = this._maximizeHover?._active;
+            if (!target || !active) {
+                this._hoverPalette?.hidePreview();
+                return;
+            }
+            this._hoverPalette.showPreview(zoneRect(Main.layoutManager.getWorkAreaForMonitor(active.monitor),
+                target.zone, this._settings.get_int('window-gap')));
+        }, {columns: 3});
         this._lease.set('org.gnome.mutter', 'edge-tiling', new GLib.Variant('b', false));
         for (const [schema, key, owned] of [
             ['org.gnome.desktop.wm.keybindings', 'switch-to-workspace-left', '<Super><Alt>Left'],
@@ -91,6 +106,10 @@ export default class Tidy extends Extension {
             this._showOverviewPicker();
         });
         this._connect(Main.overview, 'hiding', () => this._closeSuperPicker());
+        // Ubuntu Dock replaces the dash (and its button) after this extension
+        // starts. The overview adjustment survives that replacement.
+        this._connect(Main.overview._overview.controls._stateAdjustment,
+            'notify::value', () => this._syncOverviewPicker());
         this._connect(Main.overview, 'window-drag-cancelled', () => {
             this._clearOverviewDrop();
             this._palette.clearSelection();
@@ -119,11 +138,13 @@ export default class Tidy extends Extension {
             });
         });
         this._connect(Main.sessionMode, 'updated', () => this._dismiss());
+        this._connect(global.workspace_manager, 'active-workspace-changed', () => this._maximizeHover?.close(true));
         this._connect(global.stage, 'captured-event', (_stage, event) => this._onCapturedEvent(event));
         this._connect(this._settings, 'changed::top-edge-enabled', () => this._cancelDrag());
         this._connect(this._settings, 'changed::resize-together', () => this._sharedResize.end());
         this._connect(this._settings, 'changed::super-key-picker', () => this._configureSuperKey());
         this._connect(this._settings, 'changed::picker-scale', () => {
+            this._maximizeHover?.close();
             if (this._superPicker) this._configureSuperKey();
             else this._cancelDrag();
         });
@@ -131,13 +152,23 @@ export default class Tidy extends Extension {
             if (this._superPicker) this._configureSuperKey();
         });
         this._connect(this._settings, 'changed::auto-picker-scale', () => {
+            this._maximizeHover?.close();
             if (this._superPicker) this._configureSuperKey();
             else this._cancelDrag();
         });
         this._connect(this._settings, 'changed::disable-native-tiling-shortcuts', () => this._configureNativeShortcuts());
+        this._connect(this._settings, 'changed::maximize-hover-enabled', () => this._configureMaximizeHover());
         this._configureNativeShortcuts();
         this._configureSuperKey();
         this._createIndicator();
+        this._configureMaximizeHover();
+        // Shell's asynchronous settings handler can finish enabling after a
+        // subsequent off request has already been processed. Reconcile once
+        // the enable call has returned and Shell has updated its active order.
+        this._later(() => {
+            if (Main.extensionManager.lookup(this.uuid)?.enabled === false)
+                Main.extensionManager._onEnabledExtensionsChanged().catch(logError);
+        });
     }
 
     _connect(object, signal, callback) {
@@ -145,6 +176,10 @@ export default class Tidy extends Extension {
     }
 
     _onCapturedEvent(event) {
+        if (this._maximizeHover?._active && [Clutter.EventType.BUTTON_PRESS, Clutter.EventType.TOUCH_BEGIN].includes(event.type())) {
+            const [x, y] = event.get_coords();
+            if (!this._hoverPalette.contains(x, y)) this._maximizeHover.close(true);
+        }
         if (this._assist && [Clutter.EventType.BUTTON_PRESS, Clutter.EventType.TOUCH_BEGIN].includes(event.type())) {
             const [x, y] = event.get_coords();
             if (!this._assist.hit(x, y)) {
@@ -156,7 +191,7 @@ export default class Tidy extends Extension {
         if (this._superPicker && Main.overview.visible)
             return Clutter.EVENT_PROPAGATE;
         if (event.type() === Clutter.EventType.KEY_PRESS && event.get_key_symbol() === Clutter.KEY_Escape &&
-            (this._drag || this._dialog || this._assist || this._palette.actor.visible || this._palette.preview.visible)) {
+            (this._drag || this._dialog || this._assist || this._maximizeHover?._active || this._palette.actor.visible || this._palette.preview.visible)) {
             const propagate = Boolean(this._drag) || Main.overview.visible;
             this._dismiss();
             return propagate ? Clutter.EVENT_PROPAGATE : Clutter.EVENT_STOP;
@@ -196,6 +231,7 @@ export default class Tidy extends Extension {
     }
 
     _action(action) {
+        this._maximizeHover?.close();
         this._overviewTransition.cancel();
         const serial = ++this._interactionSerial;
         const window = this._superPicker?.window ?? global.display.focus_window;
@@ -256,6 +292,7 @@ export default class Tidy extends Extension {
     }
 
     _beginDrag(window) {
+        this._maximizeHover?.close();
         this._overviewTransition.cancel();
         this._interactionSerial++;
         this._closeSuperPicker();
@@ -364,6 +401,7 @@ export default class Tidy extends Extension {
     }
 
     _dismiss(keepTransition = null) {
+        this._maximizeHover?.close(true);
         this._interactionSerial++;
         this._overviewPlacement = null;
         this._overviewTransition.cancel(keepTransition);
@@ -402,8 +440,28 @@ export default class Tidy extends Extension {
         }
     }
 
+    _configureMaximizeHover() {
+        this._maximizeHover?.destroy();
+        this._maximizeHover = null;
+        if (!this._settings.get_boolean('maximize-hover-enabled')) return;
+        this._maximizeHover = new MaximizeHover({picker: this._hoverPalette,
+            scaleFor: monitor => this._pickerScale(monitor),
+            available: () => !Main.overview.visible && Main.sessionMode.hasWindows && !Main.sessionMode.isLocked &&
+                !this._drag && !this._dialog && !this._assist && !this._superPicker && !this._sharedResize?._session,
+            onOpen: () => this._armEscape(),
+            onClose: () => { if (!this._drag) this._disarmEscape(); },
+            onSelect: (window, zone, monitor, zones) => {
+                this._dismiss();
+                if (!canTile(window) || !window.get_compositor_private()) return;
+                Main.activateWindow(window);
+                this._place(window, zone, monitor, zones);
+            },
+        });
+    }
+
     _showOverviewPicker() {
         if (this._superPicker || !this._settings.get_boolean('super-key-picker')) return;
+        if (this._overviewIsAppGrid()) return;
         if (this._drag || this._sharedResize._session || !Main.sessionMode.hasWindows || Main.sessionMode.isLocked) return;
         this._tiler.finishAnimations();
         const window = canTile(global.display.focus_window) ? global.display.focus_window :
@@ -533,6 +591,22 @@ export default class Tidy extends Extension {
         this._overviewSearch = null;
     }
 
+    _overviewIsAppGrid() {
+        const adjustment = Main.overview._overview.controls._stateAdjustment;
+        const {finalState} = adjustment.getStateTransitionParams();
+        return finalState === 2 || (adjustment.value > 1 && finalState !== 1);
+    }
+
+    _syncOverviewPicker() {
+        if (this._overviewIsAppGrid()) {
+            this._closeSuperPicker();
+            this._palette.hide(true);
+            this._restoreOverviewSpace();
+        } else if (Main.overview.visible && !Main.overview.closing) {
+            this._showOverviewPicker();
+        }
+    }
+
     _closeSuperPicker() {
         this._clearOverviewDrop();
         this._overviewDrag.end();
@@ -557,12 +631,16 @@ export default class Tidy extends Extension {
             Main.wm.allowKeybinding(Meta.external_binding_name_for_action(this._escapeAction), Shell.ActionMode.ALL);
     }
 
-    _cancelDrag(immediate = false, keepPreview = false) {
+    _disarmEscape() {
         if (this._escapeAction) {
             Main.wm.allowKeybinding(Meta.external_binding_name_for_action(this._escapeAction), Shell.ActionMode.NONE);
             global.display.ungrab_accelerator(this._escapeAction);
             this._escapeAction = 0;
         }
+    }
+
+    _cancelDrag(immediate = false, keepPreview = false) {
+        this._disarmEscape();
         if (this._pollId) {
             GLib.Source.remove(this._pollId);
             this._pollId = 0;
@@ -596,6 +674,11 @@ export default class Tidy extends Extension {
     }
 
     disable() {
+        if (!this._settings) return;
+        this._maximizeHover?.destroy();
+        this._maximizeHover = null;
+        this._hoverPalette?.destroy();
+        this._hoverPalette = null;
         this._overviewPlacement = null;
         this._closeSuperPicker();
         this._restoreOverviewSpace();

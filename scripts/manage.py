@@ -47,6 +47,47 @@ def set_enabled(uuid, enabled):
         raise RuntimeError(_('GNOME could not find the extension: {uuid}', uuid=uuid))
 
 
+def wait_for_extension(uuid, enabled):
+    for attempt in range(50):
+        info = extension_info(uuid)
+        state = info.get('state')
+        if (enabled and state == 1) or (not enabled and (not info or state in (2, 6))):
+            return
+        if state in (3, 4, 99):
+            raise RuntimeError(_('Extension transition failed: {uuid}: {error}',
+                uuid=uuid, error=info.get('error') or str(state)))
+        time.sleep(0.1)
+    raise RuntimeError(_('Extension transition timed out: {uuid}', uuid=uuid))
+
+
+def extension_installed(uuid):
+    directories = [DATA, *(Path(path) for path in GLib.get_system_data_dirs())]
+    return any((directory / 'gnome-shell/extensions' / uuid / 'extension.js').is_file()
+        for directory in directories)
+
+
+def enable_after_login(uuid):
+    # Removing a user override unregisters the UUID for this session even when
+    # a system copy remains. Persist the preference without trying to load JS.
+    settings = Gio.Settings.new('org.gnome.shell')
+    enabled = settings.get_strv('enabled-extensions')
+    disabled = settings.get_strv('disabled-extensions')
+    changes = {}
+    if uuid not in enabled:
+        changes['enabled-extensions'] = [*enabled, uuid]
+    if uuid in disabled:
+        changes['disabled-extensions'] = [item for item in disabled if item != uuid]
+    if any(not settings.is_writable(key) for key in changes):
+        raise RuntimeError(_('Extension preferences are read-only: {uuid}', uuid=uuid))
+    settings.delay()
+    for key, value in changes.items():
+        if not settings.set_strv(key, value):
+            settings.revert()
+            raise RuntimeError(_('Could not save extension preferences: {uuid}', uuid=uuid))
+    settings.apply()
+    Gio.Settings.sync()
+
+
 def open_preferences():
     STATE.mkdir(parents=True, exist_ok=True)
     with (STATE / 'preferences.log').open('a') as log:
@@ -111,7 +152,14 @@ def restore_competitors():
         failed = []
         for uuid in pending:
             try:
-                set_enabled(uuid, True)
+                if extension_info(uuid):
+                    set_enabled(uuid, True)
+                    wait_for_extension(uuid, True)
+                elif extension_installed(uuid):
+                    enable_after_login(uuid)
+                    print(_('The previous extension will be restored at the next login: {uuid}', uuid=uuid))
+                else:
+                    print(_('The previous extension is no longer installed; skipping restoration: {uuid}', uuid=uuid))
             except RuntimeError as error:
                 failed.append(uuid)
                 print(error, file=sys.stderr)
@@ -173,12 +221,7 @@ def activate():
     try:
         for uuid in competitors:
             set_enabled(uuid, False)
-        for attempt in range(50):
-            if all(extension_info(uuid).get('state') != 1 for uuid in competitors):
-                break
-            time.sleep(0.1)
-        else:
-            raise RuntimeError(_('The previous tiling extension did not stop.'))
+            wait_for_extension(uuid, False)
         set_enabled(UUID, True)
         for attempt in range(50):
             info = extension_info()
@@ -210,8 +253,10 @@ def apply_update():
 def uninstall():
     if DEST.is_symlink():
         raise RuntimeError(_('Remove symlink installations manually: {path}', path=DEST))
-    if extension_info():
+    registered = extension_info()
+    if registered:
         set_enabled(UUID, False)
+        wait_for_extension(UUID, False)
     elif DEST.exists():
         print(_('The extension is not registered in this session. Checking settings recovery.'))
     # Also recover settings if a Shell crash prevented disable() from running.
@@ -221,6 +266,9 @@ def uninstall():
         subprocess.run(['gjs', '-m', str(DEST / 'scripts/recover.js')], env=env, check=True)
     restore_competitors()
     finish_update()
+    if registered:
+        if not shell_call('UninstallExtension', '(s)', (UUID,))[0]:
+            raise RuntimeError(_('GNOME could not remove Tidy.'))
     if DEST.exists():
         shutil.rmtree(DEST)
     (DATA / 'applications/winubun.desktop').unlink(missing_ok=True)

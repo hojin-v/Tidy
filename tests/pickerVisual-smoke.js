@@ -48,12 +48,11 @@ export async function testPickerVisual(extension, assert) {
     };
     const consistentBounds = () => {
         const box = bounds(palette.actor);
-        const first = bounds(palette._cards.cards[0].diagram);
-        const last = bounds(palette._cards.cards.at(-1).diagram);
-        const left = first.x - box.x;
-        const right = box.x + box.width - last.x - last.width;
-        const top = first.y - box.y;
-        const bottom = box.y + box.height - first.y - first.height;
+        const diagrams = palette._cards.cards.map(card => bounds(card.diagram));
+        const left = Math.min(...diagrams.map(item => item.x)) - box.x;
+        const right = box.x + box.width - Math.max(...diagrams.map(item => item.x + item.width));
+        const top = Math.min(...diagrams.map(item => item.y)) - box.y;
+        const bottom = box.y + box.height - Math.max(...diagrams.map(item => item.y + item.height));
         return left > 0 && top > 0 && Math.abs(left - right) <= 1 && Math.abs(top - bottom) <= 1 &&
             palette._targets.every(({button}) => {
                 const cell = bounds(button);
@@ -61,6 +60,10 @@ export async function testPickerVisual(extension, assert) {
                     cell.x + cell.width <= box.x + box.width && cell.y + cell.height <= box.y + box.height;
             });
     };
+    const diagrams = palette._cards.cards.map(card => bounds(card.diagram));
+    assert(diagrams.length === 6 && diagrams.every((item, index) => Math.abs(item.y - diagrams[0].y) < 1 &&
+        (index === 0 || item.x >= diagrams[index - 1].x + diagrams[index - 1].width)),
+        'the top picker keeps all six diagrams on a single row');
     let smallWidth;
     for (const [size, relative] of [[50, 100], [200, 100], [75, 100], [200, 200], [100, 100]]) {
         extension._settings.set_int('picker-scale', size);
@@ -131,9 +134,9 @@ export async function testPickerVisual(extension, assert) {
         const base = palette.actor.width;
         extension._settings.set_boolean('auto-picker-scale', true);
         await Scripting.sleep(350);
-        assert(palette.actor.width > base * 1.3 && consistentBounds() &&
-            extension._pickerScale(index) === normal / 100 * 1.35,
-            'large external display automatically grows both diagrams and background from the configured size');
+        assert(palette.actor.width > base * 1.06 && consistentBounds() &&
+            extension._pickerScale(index) === normal / 100 * 1.08,
+            '32 inch automatic sizing at 100% matches the former 80% calibration for diagrams and background');
         assert(extension._pickerScale(index, true) === extension._pickerScale(index) * overview / 100,
             'overview uses the same monitor adjustment and preserves its separate size preference');
         fake[index].builtin = true;

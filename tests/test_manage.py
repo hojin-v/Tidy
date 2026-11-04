@@ -81,6 +81,80 @@ class UpdateTests(unittest.TestCase):
         self.assertFalse(manage.DEST.exists())
 
 
+class HandoverTests(unittest.TestCase):
+    uuid = 'tiling-assistant@ubuntu.com'
+
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        for name, value in {'STATE': self.root / 'state', 'DATA': self.root / 'data'}.items():
+            patcher = patch.object(manage, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        for patcher in [
+            patch.object(manage, '_', lambda message, **values: message.format(**values)),
+            patch.object(manage.GLib, 'get_system_data_dirs', return_value=[str(self.root / 'system')]),
+            patch.object(manage.time, 'sleep'),
+        ]:
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        manage.STATE.mkdir()
+        self.journal = manage.STATE / 'handover.json'
+        self.journal.write_text(json.dumps([self.uuid]))
+
+    def test_registered_extension_must_reach_active_before_clearing_the_journal(self):
+        with patch.object(manage, 'extension_info', side_effect=[{'state': 2}, {'state': 5}, {'state': 1}]), \
+             patch.object(manage, 'set_enabled') as enabled:
+            manage.restore_competitors()
+        enabled.assert_called_once_with(self.uuid, True)
+        self.assertFalse(self.journal.exists())
+
+    def test_failed_activation_keeps_the_recovery_journal(self):
+        with patch.object(manage, 'extension_info', side_effect=[{'state': 2}, {'state': 3, 'error': 'panel failure'}]), \
+             patch.object(manage, 'set_enabled'):
+            with self.assertRaisesRegex(RuntimeError, 'Could not restore'):
+                manage.restore_competitors()
+        self.assertEqual(json.loads(self.journal.read_text()), [self.uuid])
+
+    def test_deleted_user_copy_restores_system_copy_preferences_for_next_login(self):
+        system = self.root / 'system/gnome-shell/extensions' / self.uuid / 'extension.js'
+        system.parent.mkdir(parents=True)
+        system.write_text('// system original must not be changed\n')
+        preferences = {'enabled-extensions': ['unrelated@example'], 'disabled-extensions': [self.uuid, 'other@example']}
+
+        class Settings:
+            def get_strv(self, key): return preferences[key][:]
+            def is_writable(self, _key): return True
+            def delay(self): pass
+            def apply(self): pass
+            def set_strv(self, key, value):
+                preferences[key] = value
+                return True
+
+        with patch.object(manage, 'extension_info', return_value={}), \
+             patch.object(manage, 'set_enabled') as enabled, \
+             patch.object(manage.Gio.Settings, 'new', return_value=Settings()):
+            manage.restore_competitors()
+        enabled.assert_not_called()
+        self.assertEqual(preferences['enabled-extensions'], ['unrelated@example', self.uuid])
+        self.assertEqual(preferences['disabled-extensions'], ['other@example'])
+        self.assertEqual(system.read_text(), '// system original must not be changed\n')
+        self.assertFalse(self.journal.exists())
+
+    def test_an_extension_removed_from_disk_is_not_reinstalled(self):
+        with patch.object(manage, 'extension_info', return_value={}), \
+             patch.object(manage, 'set_enabled') as enabled:
+            manage.restore_competitors()
+        enabled.assert_not_called()
+        self.assertFalse(self.journal.exists())
+
+    def test_disable_error_is_not_treated_as_a_successful_stop(self):
+        with patch.object(manage, 'extension_info', return_value={'state': 3, 'error': 'cleanup failure'}):
+            with self.assertRaisesRegex(RuntimeError, 'cleanup failure'):
+                manage.wait_for_extension(self.uuid, False)
+
+
 class PortableInstallTests(unittest.TestCase):
     bundled = False
 
@@ -175,6 +249,25 @@ class PortableInstallTests(unittest.TestCase):
         self.assertFalse((self.data / 'applications/winubun.desktop').exists())
         self.assertFalse(self.autostart.exists())
         self.assertFalse((self.state / 'pending-update.json').exists())
+
+    def test_uninstall_waits_for_the_running_extension_to_stop(self):
+        with patch.object(manage, 'extension_info', side_effect=[{'state': 1}, {'state': 5}, {'state': 2}]), \
+             patch.object(manage, 'set_enabled') as enabled, \
+             patch.object(manage, 'shell_call', return_value=(True,)) as shell, \
+             patch.object(manage.time, 'sleep'):
+            manage.uninstall()
+        enabled.assert_called_once_with(manage.UUID, False)
+        shell.assert_called_once_with('UninstallExtension', '(s)', (manage.UUID,))
+        self.assertFalse(self.dest.exists())
+
+    def test_uninstall_preserves_files_if_the_extension_does_not_stop(self):
+        with patch.object(manage, 'extension_info', return_value={'state': 1}), \
+             patch.object(manage, 'set_enabled'), \
+             patch.object(manage.time, 'sleep'):
+            with self.assertRaisesRegex(RuntimeError, 'timed out'):
+                manage.uninstall()
+        self.assertTrue(self.dest.exists())
+        self.assertTrue((self.data / 'applications/winubun.desktop').exists())
 
 
 class BundledInstallTests(PortableInstallTests):

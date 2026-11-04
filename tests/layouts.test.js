@@ -2,6 +2,24 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {ACTIONS, adjacentMonitor, companionZones, contains, dragIntent, directionalMonitor, LAYOUTS, monitorAt, ZONES, zoneRect} from '../lib/layouts.js';
 
+test('the picker replaces maximize with a 1:2:1 layout immediately after equal thirds', () => {
+    assert.equal(LAYOUTS.length, 6);
+    assert(!LAYOUTS.some(layout => layout.zones.includes('maximize')));
+    assert(!LAYOUTS.some(layout => layout.name === 'Top and bottom'));
+    const index = LAYOUTS.findIndex(layout => layout.name === 'Three columns');
+    assert.equal(index % 3, 0, 'both three-column layouts stay beside each other on the second row');
+    assert.deepEqual(LAYOUTS[index + 1].zones, ['left-quarter', 'center-half', 'right-quarter']);
+    for (const width of [1279, 1440, 1921]) {
+        const area = {x: -1280, y: 30, width, height: 870};
+        const [left, center, right] = LAYOUTS[index + 1].zones.map(zone => zoneRect(area, zone));
+        assert.equal(left.x + left.width, center.x);
+        assert.equal(center.x + center.width, right.x);
+        assert.equal(right.x + right.width, area.x + width);
+        assert(Math.abs(center.width - left.width * 2) <= 1);
+        assert.deepEqual(companionZones('center-half'), ['left-quarter', 'right-quarter']);
+    }
+});
+
 test('every layout partitions the whole screen without overlaps', () => {
     for (const layout of LAYOUTS) {
         let total = 0;
@@ -66,6 +84,8 @@ test('companion layouts contain only remaining disjoint regions', () => {
     assert.deepEqual(companionZones('top-left'), ['top-right', 'bottom-left', 'bottom-right']);
     assert.deepEqual(companionZones('maximize'), []);
     assert.deepEqual(companionZones('center'), []);
+    assert.deepEqual(companionZones('top'), ['bottom']);
+    assert.deepEqual(companionZones('bottom'), ['top']);
 });
 
 test('actions have unique keys and accelerators and valid destinations', () => {

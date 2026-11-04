@@ -28,4 +28,5 @@ assert keys['picker-scale'].findtext('default') == '100'
 assert keys['overview-picker-scale'].findtext('default') == '100'
 assert keys['auto-picker-scale'].findtext('default') == 'true'
 assert keys['auto-trigger-width'].findtext('default') == 'true'
+assert keys['maximize-hover-enabled'].findtext('default') == 'true'
 print('JavaScript 구문, GSettings 스키마, 단축키 기본값 검사 통과')

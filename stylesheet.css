@@ -8,7 +8,6 @@
     padding: 16px;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
 }
-.winubun-cards { spacing: 12px; }
 .tidy-drag-hint {
     background-color: rgba(55, 55, 55, 0.96);
     border: 1px solid rgba(255, 255, 255, 0.22);

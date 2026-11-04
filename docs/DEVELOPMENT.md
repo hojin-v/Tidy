@@ -27,6 +27,8 @@ GSETTINGS_BACKEND=memory GSETTINGS_SCHEMA_DIR="$PWD/schemas" gjs -m tests/lease-
 
 Shell 통합 테스트는 GNOME 50의 `gnome-shell-test-tool`과 가상 모니터를 지원하는 그래픽 환경이 필요합니다. 별도 D-Bus, 런타임 디렉터리, 설정 저장소와 헤드리스 Wayland 세션에서 동작합니다.
 
+Ubuntu Dock이 설치된 환경에서는 `TIDY_TEST_UBUNTU_DOCK=1 /usr/bin/python3 scripts/test-shell.py`로 Tidy 활성화 후 앱 표시 버튼이 교체되는 경우도 확인합니다. 선택기는 교체된 버튼과 관계없이 Super+A 앱 목록에서 숨겨져야 합니다.
+
 ## Test coverage
 
 - 화면 분할 경계, 창 사이 간격, 음수 좌표와 방향별 모니터 탐색
@@ -42,8 +44,14 @@ Shell 통합 테스트는 GNOME 50의 `gnome-shell-test-tool`과 가상 모니�
 - 창·앱 보기의 드래그 즉시 축소, 포인터 고정·복귀와 작은 상태에서의 배치 전환
 - 남은 공간의 앱 선택, 빈 곳 클릭·Esc 취소와 최소화된 창 복원
 - 원본 소스 폴더를 삭제한 뒤 설치 도구 실행·설정 복구·제거
+- 제거 전 확장 종료 확인, 기존 확장 복원 상태 검증과 삭제된 사용자 확장의 시스템 원본을 다음 로그인에 복원
 - npm tarball 전역 설치, 읽기 전용 패키지, CLI 언어·의존성 검사와 설치된 복구 도구 연결
-- 확장 재활성화, 예약 작업 취소와 데스크톱 설정 복원
+- 확장 재활성화·빠른 켜기/끄기, 예약 작업 취소와 데스크톱 설정 복원
+- 상단 한 행 선택기와 최대화 버튼 3열 × 2행 선택기의 개별 배치·클릭·드래그
+- Super+A 앱 목록에서 선택기·드롭 영역·추가 검색 여백 해제와 창 보기 복귀
+- 중첩된 Chromium 제목 표시줄, 한국어 ‘복구’ 버튼, 창 그림자를 포함한 접근성 좌표 변환
+
+접근성 조회 회귀 검사는 `gjs -m tests/maximizeButton-smoke.js`로 실행합니다. 실제 Brave 검사는 `TIDY_BRAVE_BINARY`에 실행 파일을 지정하고 `python3 scripts/test-shell.py --brave-only`로 실행합니다. 별도 프로필·GTK 3 제목 표시줄·정적 `data:` 페이지를 사용하며, 테스트용 버튼 설정 모듈을 만들 C 컴파일러와 GTK 3 런타임이 필요합니다. Snap 내부 바이너리를 직접 사용하는 환경의 테스트에 한해 `TIDY_BRAVE_TEST_NO_SANDBOX=1`을 지정할 수 있으며, 실제 사용자 브라우저의 설정이나 실행 인자는 바꾸지 않습니다.
 
 헤드리스 백엔드에서는 실제 마우스 제스처 대신 잡기 신호·포인터 좌표·Shell 드래그 콜백을 주입합니다. 실제 마우스 조작은 데스크톱에서 별도로 확인해야 합니다. GNOME 46–49와 X11은 실기 검증 전입니다.
 

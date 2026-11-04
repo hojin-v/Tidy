@@ -5,9 +5,9 @@ import {automaticPickerScale, displayProfiles} from '../lib/monitorScale.js';
 const laptop = {x: 2560, y: 402, width: 1440, height: 900, inches: 15.94, builtin: true};
 const external = {x: 0, y: 0, width: 2560, height: 1440, inches: 33.36, builtin: false};
 
-test('a 16 inch built-in display remains the baseline while a 32 inch external display grows gently', () => {
+test('100% preserves the 16 inch baseline and matches the former 80% size on a 32 inch external display', () => {
     assert.equal(automaticPickerScale(laptop, laptop), 1);
-    assert.equal(automaticPickerScale(external, laptop), 1.35);
+    assert.equal(automaticPickerScale(external, laptop), 1.08);
 });
 
 test('monitor rotation preserves the automatic size', () => {
@@ -28,7 +28,7 @@ test('missing physical sizes use a conservative resolution fallback', () => {
 });
 
 test('automatic enlargement remains bounded and handles absent monitors', () => {
-    assert.equal(automaticPickerScale({...external, width: 16000, height: 9000}, laptop), 1.5);
+    assert.equal(automaticPickerScale({...external, width: 16000, height: 9000}, laptop), 1.2);
     assert.equal(automaticPickerScale({...external, width: 800, height: 600, inches: 10}, laptop), 1);
     assert.equal(automaticPickerScale(null), 1);
     assert.equal(automaticPickerScale({width: 0, height: 0}), 1);
@@ -45,7 +45,7 @@ test('display profiles map physical dimensions to logical coordinates rather tha
     assert.equal(profiles[0].builtin, false);
     assert.equal(profiles[1].builtin, true);
     assert.equal(automaticPickerScale(profiles[1], profiles[1]), 1);
-    assert.equal(automaticPickerScale(profiles[0], profiles[1]), 1.35);
+    assert.equal(automaticPickerScale(profiles[0], profiles[1]), 1.08);
 });
 
 test('mirrored screens use the smaller physical display and retain built-in sizing', () => {

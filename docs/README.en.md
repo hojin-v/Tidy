@@ -5,7 +5,7 @@
 Window tiling for GNOME
 
 Drag a window to the top of a monitor, choose a layout, and move between monitors with keyboard shortcuts.
-Tidy brings familiar ideas from Windows Snap Layouts and macOS Magnet to Ubuntu GNOME.
+Tidy adds flexible window arrangement to Ubuntu GNOME.
 
 ![GNOME](https://img.shields.io/badge/GNOME-46%E2%80%9350-4a86cf)
 ![Session](https://img.shields.io/badge/session-Wayland-555555)
@@ -27,14 +27,19 @@ The interface follows your desktop language. Korean and English are supported; o
 
 | Feature | Behavior |
 | --- | --- |
-| Top layout picker | Drop a window into a cell in one of seven layouts. |
+| Top layout picker | Drop a window into one of six layouts arranged in a single row. |
+| Maximize button picker | Hover over maximize or restore to open a three-column, two-row picker below the button. Can be disabled in settings. |
 | Edge snapping | Other top edges maximize; left and right edges tile halves. |
-| Overview integration | Press Super to open GNOME's overview and the picker together, then drag a window preview onto a layout. |
+| Overview integration | Press Super to open window overview and the single-row picker together. The picker is hidden in the Super+A application grid. |
 | Custom shortcuts | Use Super+Alt for halves, quarters, thirds and two-thirds; customize the bindings in settings. |
 | Multiple monitors | Repeat an arrow shortcut to move to the monitor in that direction, including above and below. Picker size adapts to each monitor. |
 | Linked resizing | Drag shared boundaries to resize adjacent tiled windows together. Enabled by default. |
 | Optional snap assist | Choose running app icons inside empty regions to fill the remaining space. Disabled by default. |
 | Size and spacing | Adjust picker sizes and window gaps, including a separate overview picker size. |
+
+The 100% picker size now matches the previous 115% size. Saved sizes are converted to the new reference. Top/bottom and maximize cards are removed, and a **¼ · ½ · ¼** layout sits immediately to the right of equal thirds. Maximize shortcuts and top-edge maximization remain available. Automatic sizing preserves the 16-inch built-in reference; on a 32-inch external monitor, the new 100% matches approximately 80% of the previous automatic size.
+
+The maximize button picker waits about 350 milliseconds before opening. Click a cell to arrange that window, move away or press Esc to dismiss. It uses actual accessibility button information and supports English and Korean maximize/restore labels, including Brave’s Korean restore control and nested titlebar containers; custom titlebars that do not expose these controls are skipped. The option defaults to on and is independent of top-edge dragging.
 
 ## Platform Support
 
@@ -90,9 +95,9 @@ All runtime tools are copied into the installation. **You can delete the downloa
 2. Drag into that area to reveal the layouts and shrink the window into a small preview. Move the pointer onto the desired layout cell.
 3. Release to tile the window. Release over empty space to cancel.
 
-Press **Super** to open the native window/app overview and the layout picker together. Drag a window preview into a cell, or click a cell to place the previously focused window. Search appears when you type.
+Press **Super** to open window overview and the single-row layout picker together. **Super+A** hides the picker and previews while the application grid is open; returning to window overview restores them. Drag a window preview into a cell, or click a cell to place the previously focused window. Search appears when you type.
 
-Window previews and app icons shrink as soon as you start dragging anywhere in the overview, and return to their original size on release or cancellation. This also works with the overview picker disabled. Dropping a window into a layout continues directly from the miniature to its final placement.
+Window previews shrink as soon as you start dragging in window overview, and return to their original size on release or cancellation. Dropping a window into a layout continues directly from the miniature to its final placement.
 
 With snap assist enabled, select an app icon in an empty region to tile its window there. Click the current window or another area, or press Esc, to finish without any additional placements.
 
@@ -184,12 +189,15 @@ Without the CLI, run the installed tool from any directory:
 
 This removes the extension and application launcher and restores the GNOME settings and competing tiling-extension state that Tidy changed. Tidy's custom settings and shortcuts are kept for reinstallation.
 
+If removing a user-installed tiling extension made its UUID unavailable in the current session, the uninstaller enables any remaining system copy for the next login and completes Tidy removal. Log out and back in when prompted. An extension removed from the system entirely is not reinstalled.
+
 The `winubun` path is a stable internal name retained for compatibility with existing settings and pinned launchers.
 
 ## Notes
 
 - If **Ubuntu Tiling Assistant** is enabled, the installer records its state and disables it. `uninstall` restores it. Disabling only Tidy in GNOME's extension manager leaves Tiling Assistant disabled.
 - Application minimum sizes and terminal resize increments can prevent an exact fit. Fullscreen windows and windows that disallow movement or resizing are excluded.
+- An X in the extension manager indicates an extension error. Check `gnome-extensions info tiling-assistant@ubuntu.com` and the Shell logs for its actual state. Duplicate initialization or failed cleanup in Ubuntu Tiling Assistant requires repairing that extension. Keep it disabled while using Tidy.
 - When reporting a problem in [Issues](https://github.com/hojin-v/Tidy/issues), include your GNOME version, Wayland/X11 session, monitor arrangement and reproduction steps.
 
 See [Development](DEVELOPMENT.md) for development commands, test coverage and diagnostic paths, and [Releasing](RELEASING.md) for npm publication.
