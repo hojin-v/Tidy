@@ -195,6 +195,8 @@ def install(archive=None):
     DEST.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(archive) as package:
         package.extractall(DEST)
+        if 'schemas/gschemas.compiled' not in package.namelist():
+            run('glib-compile-schemas', '--strict', str(DEST / 'schemas'))
     install_launcher()
     if not registered or registered.get('version') != metadata['version']:
         schedule_update(metadata['version'])

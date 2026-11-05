@@ -1,0 +1,35 @@
+name: Compatibility
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  portable:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm test
+      - run: npm run check
+      - run: npm run build
+      - if: runner.os == 'macOS'
+        run: node scripts/native-smoke.js
+      - if: runner.os == 'macOS'
+        run: npm ci --prefix desktop --ignore-scripts --no-audit --no-fund
+      - if: runner.os == 'macOS'
+        run: npm run test:desktop-ui
+      - run: npm pack --dry-run
+  gnome-recovery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: sudo apt-get update && sudo apt-get install -y python3-gi gjs libglib2.0-bin gir1.2-gtk-4.0 gir1.2-adw-1
+      - run: /usr/bin/python3 -m unittest discover -s tests -p 'test_*.py'

@@ -2,7 +2,7 @@
 
 [한국어 안내](../README.md) · [English guide](README.en.md)
 
-Tidy는 GNOME Shell 확장과 설치·복구를 담당하는 Python 도구로 구성됩니다. 설치 및 실행에 npm 패키지는 필요하지 않습니다.
+Tidy는 GNOME Shell 확장과 Python 관리 도구, macOS용 Electron 앱과 Swift 창 제어 도구로 구성됩니다. GNOME판은 npm 없이 설치할 수 있습니다. 데스크톱 앱 구조와 기능 범위는 [macOS](MACOS.md)를 참고하세요.
 
 ## Build and checks
 
@@ -18,7 +18,11 @@ npm run test:package
 
 빌드 결과는 `dist/winubun@winubun.local.shell-extension.zip`입니다. 런타임 소스, 컴파일한 스키마, 설치·복구 도구와 GPL 라이선스 파일을 포함합니다.
 
-npm 배포 이름은 `@hnode/tidy`이고 실행 파일은 `bin/tidy.js`입니다. `npm pack`은 `prepack`에서 확장 ZIP을 빌드합니다. 사용자 설치 시에는 이 ZIP을 사용하므로 npm 패키지 경로가 읽기 전용이어도 됩니다. 게시 절차와 tarball 검증은 [Releasing](RELEASING.md)을 참고하세요.
+npm 배포 이름은 `@hnode/tidy`이고 실행 파일은 `bin/tidy.js`입니다. `npm pack`은 `prepack`에서 Node.js로 확장 ZIP을 빌드합니다. 이 빌드는 macOS에서도 Python 없이 동작합니다. GLib 컴파일러가 없는 환경에서는 XML 스키마를 포함하고 GNOME 설치 시 컴파일합니다. 사용자 설치 시에는 이 ZIP을 사용하므로 npm 패키지 경로가 읽기 전용이어도 됩니다. 게시 절차와 tarball 검증은 [Releasing](RELEASING.md)을 참고하세요.
+
+`npm test`, `npm run check`, `npm run build`는 Ubuntu와 macOS에서 실행할 수 있습니다. `desktop/core.js`는 GNOME과 같은 배치 및 모니터 계산을 사용하며, `native-bridge.js`는 Swift 실행부와 같은 논리 좌표를 전달합니다. Mac에서 `node scripts/native-smoke.js`로 Swift를 컴파일한 뒤 읽기 전용 프로토콜과 오류 전달을 확인합니다. 손쉬운 사용 권한을 요청하거나 실제 창을 이동하지 않습니다. `.github/workflows/ci.yml`에 OS별 검사를 구성했습니다. 실제 창 제스처·권한·로그인 자동 실행은 각 OS에서 수동 검증해야 합니다.
+
+데스크톱 UI는 `npm ci --prefix desktop --ignore-scripts` 후 `npm run test:desktop-ui`로 검사합니다. 첫 실행에 Electron을 다운로드하며, 별도 임시 프로필에서 실제 Chromium으로 선택기 영역·클릭·Esc·한국어 설정·저장·잘못된 단축키 오류를 확인합니다. 자동 실행과 전역 단축키를 등록하거나 창을 이동하지 않습니다. 현재 Ubuntu 환경의 샌드박스 설치 제한으로 UI 검사에만 `npm run test:desktop-ui -- --no-sandbox`를 사용했습니다. 제품 창의 `sandbox: true`는 유지합니다.
 
 ```bash
 GSETTINGS_BACKEND=memory GSETTINGS_SCHEMA_DIR="$PWD/schemas" gjs -m tests/lease-smoke.js

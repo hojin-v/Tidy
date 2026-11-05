@@ -5,6 +5,7 @@ import {homedir} from 'node:os';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createTranslator} from '../lib/i18nCore.js';
+import {desktopCommand} from '../desktop/manage.js';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const metadata = JSON.parse(readFileSync(join(root, 'metadata.json'), 'utf8'));
@@ -13,10 +14,10 @@ const catalogs = JSON.parse(readFileSync(join(root, 'lib/translations.json'), 'u
 const commands = ['install', 'update', 'uninstall', 'prefs', 'status', 'doctor'];
 
 export function main({args = process.argv.slice(2), env = process.env, platform = process.platform,
-    uid = process.getuid?.(), packageRoot = root, run = spawnSync, out = console.log, error = console.error} = {}) {
+    uid = process.getuid?.(), packageRoot = root, run = spawnSync, desktop = desktopCommand, out = console.log, error = console.error} = {}) {
     const languages = env.LANGUAGE?.split(':') ?? [env.LC_ALL || env.LC_MESSAGES || env.LANG || 'C'];
     const _ = createTranslator(catalogs, languages);
-    const help = () => out(_('Tidy · Window tiling for GNOME\n\nUsage: tidy <command>\n       tidy [options]\n\nCommands:\n  install     Install Tidy for the current user\n  update      Install this package version of Tidy\n  uninstall   Remove Tidy and restore desktop settings\n  prefs       Open settings and shortcuts\n  status      Show the installed extension status\n  doctor      Check system requirements\n\nOptions:\n  -h, --help     Show this help\n  -v, --version  Show package version\n\nAfter installation, log out and back in once.'));
+    const help = () => out(_('Tidy · Window tiling for Linux and macOS\n\nUsage: tidy <command>\n       tidy [options]\n\nCommands:\n  install     Install Tidy for the current user\n  update      Install this package version of Tidy\n  uninstall   Remove Tidy and restore desktop settings\n  prefs       Open settings and shortcuts\n  status      Show installation and runtime status\n  doctor      Check system requirements\n\nOptions:\n  -h, --help     Show this help\n  -v, --version  Show package version\n\nGNOME: log out and back in once. macOS: starts immediately.'));
     if (!args.length || args[0] === 'help' || args.includes('--help') || args.includes('-h')) {
         help();
         return 0;
@@ -29,8 +30,10 @@ export function main({args = process.argv.slice(2), env = process.env, platform 
         error(_('Unknown command. Run tidy --help.'));
         return 2;
     }
+    if (platform === 'darwin')
+        return desktop(args[0], {platform, env, packageRoot, run, out, error});
     if (platform !== 'linux') {
-        error(_('Tidy requires Linux with GNOME Shell 46–50.'));
+        error(_('Tidy supports Linux with GNOME Shell 46–50 and macOS.'));
         return 1;
     }
     const command = args[0];

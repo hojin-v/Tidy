@@ -2,10 +2,10 @@
 
 [한국어](README.md) · [English](docs/README.en.md)
 
-Window tiling for GNOME
+Window tiling for GNOME and macOS
 
 창을 화면 위로 끌어 배치를 고르고, 단축키로 모니터 사이를 이동하세요.
-Ubuntu GNOME에서 창을 나누고 정렬하는 확장입니다.
+Ubuntu GNOME 확장과 macOS 데스크톱 앱으로 창을 나누고 정렬합니다.
 
 ![GNOME](https://img.shields.io/badge/GNOME-46%E2%80%9350-4a86cf)
 ![Session](https://img.shields.io/badge/session-Wayland-555555)
@@ -17,13 +17,15 @@ Ubuntu GNOME에서 창을 나누고 정렬하는 확장입니다.
 
 ## Overview
 
-Tidy는 GNOME Shell에서 실행되는 창 배치 확장입니다. 여러 모니터를 사용할 때도 화면 상단 안쪽에서 배치 선택기를 열고, 그림으로 표시된 칸에 창을 놓을 수 있습니다.
+Tidy는 Ubuntu GNOME과 macOS에서 창을 배치합니다. GNOME에서는 Shell 확장으로, macOS에서는 별도 데스크톱 앱으로 실행됩니다. 여러 모니터를 사용할 때도 화면 상단 안쪽에서 배치 선택기를 열고, 그림으로 표시된 칸에 창을 놓을 수 있습니다.
 
 <img src="docs/preview.png" alt="무채색 배치 그림으로 구성된 Tidy 상단 선택기" width="760">
 
 설정 화면과 메뉴는 시스템 언어를 따릅니다. 한국어와 영어를 지원하며, 그 외 언어에서는 영어로 표시합니다.
 
 ## Features
+
+아래 표는 GNOME판의 기능입니다. macOS판은 배치 선택기, 상단 드래그·가장자리 배치, 단축키, 다중 모니터, 최대화·복귀와 창 간격을 제공합니다. 기능 범위와 설치 방법은 [macOS 안내](docs/MACOS.md)를 참고하세요.
 
 | 기능 | 동작 |
 | --- | --- |
@@ -48,11 +50,14 @@ Tidy는 GNOME Shell에서 실행되는 창 배치 확장입니다. 여러 모니
 | Ubuntu 26.04 · GNOME 50.1 · Wayland | 독립 GNOME 세션의 실제 Wayland 창과 가상 모니터 2개로 검증 |
 | GNOME 46–49 | 호환 버전으로 선언되어 있으나 실기 검증 전 |
 | X11 | 실기 검증 전 |
-| KDE · Xfce · Windows · macOS | 지원 대상 아님 |
+| macOS 13 이상 · Intel/Apple Silicon | Accessibility 기반 데스크톱 앱 추가 · 실기 검증 전 |
+| KDE · Xfce | 지원 대상 아님 |
 
-실행에는 시스템 Python 3와 PyGObject, GJS, GTK 4/libadwaita가 필요합니다. npm 명령에는 Node.js 18 이상이 필요하며, 소스에서 직접 빌드할 때는 `glib-compile-schemas`도 필요합니다. 설치된 GNOME 확장은 Node.js나 npm 프로세스를 띄우지 않습니다.
+GNOME판 실행에는 시스템 Python 3와 PyGObject, GJS, GTK 4/libadwaita가 필요합니다. GNOME용 npm 명령에는 Node.js 18 이상이 필요하며, 소스에서 직접 빌드할 때는 `glib-compile-schemas`도 필요합니다. 설치된 GNOME 확장은 Node.js나 npm 프로세스를 띄우지 않습니다. macOS 설치에는 Node.js 22.12 이상과 npm, Xcode Command Line Tools와 손쉬운 사용 권한이 필요합니다.
 
 ## Install
+
+macOS도 `tidy install`로 설치합니다. 설치 후 즉시 실행되며 로그인 자동 실행을 등록합니다. 소스에서는 `node bin/tidy.js install`을 사용하세요. 권한 설정과 필수 도구는 [macOS 안내](docs/MACOS.md)에 설명되어 있습니다. 아래의 로그아웃·재로그인 및 Python 설치 절차는 GNOME판에 해당합니다.
 
 ### npm
 
@@ -91,6 +96,8 @@ Git 대신 [Download ZIP](https://github.com/hojin-v/Tidy/archive/refs/heads/mai
 
 ## Quick Start
 
+아래의 Super·창 보기 연동은 GNOME판 기능입니다. macOS에서는 메뉴 막대 아이콘이나 배치 선택기 단축키를 사용하며, 상단으로 창을 끌어 배치할 수도 있습니다.
+
 1. 창의 제목 표시줄을 잡으면 상단에 선택기 인식 영역이 얇게 나타납니다.
 2. 그 영역으로 끌면 선택기가 펼쳐지고 창이 작은 미리보기로 줄어듭니다. 원하는 배치 칸으로 포인터를 옮깁니다.
 3. 마우스를 놓으면 창을 배치합니다. 빈 곳에서 놓으면 취소합니다.
@@ -106,6 +113,8 @@ Git 대신 [Download ZIP](https://github.com/hojin-v/Tidy/archive/refs/heads/mai
 배치 미리보기는 선택기와 같은 차콜·회색 톤의 은은한 테두리와 옅은 반투명 음영, 부드러운 그림자로 표시합니다. 좌우·상단 가장자리에서도 같은 영역에 머무르는 동안 안정적으로 유지됩니다.
 
 ## Shortcuts
+
+macOS판은 아래 배치 동작에 **Control+Option**을 사용합니다. 단독 Super와 Super+A의 창 보기 연동은 GNOME판 기능입니다. macOS의 기본 타일링과 시스템 단축키 설정은 변경하지 않습니다. [macOS 단축키 안내](docs/MACOS.md#shortcuts-and-settings)를 참고하세요.
 
 배치 단축키는 **Super+Alt** 조합으로 통일되어 있습니다. 설정의 **단축키** 탭에서 바꿀 수 있습니다.
 
@@ -128,6 +137,8 @@ Git 대신 [Download ZIP](https://github.com/hojin-v/Tidy/archive/refs/heads/mai
 위쪽 절반에서 **Super+Alt+↑**를 한 번 더 누르면 위 모니터의 아래쪽 절반으로 이동하고, 아래쪽 절반에서 **Super+Alt+↓**를 한 번 더 누르면 아래 모니터의 위쪽 절반으로 이동합니다. 맨 위·맨 아래에서도 반대편 끝으로 순환합니다.
 
 ## Settings
+
+macOS에서는 `tidy prefs` 또는 메뉴 막대 아이콘으로 설정을 엽니다. 설정 범위는 [macOS 안내](docs/MACOS.md#shortcuts-and-settings)를 참고하세요. 아래 옵션은 GNOME판 기준입니다.
 
 앱 목록의 **Tidy** 또는 **상단 격자 아이콘 → 설정 및 단축키…**에서 변경합니다. 설정은 즉시 반영됩니다.
 

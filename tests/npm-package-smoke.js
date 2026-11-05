@@ -58,8 +58,14 @@ try {
     assert.equal(packaged.scripts.postinstall, undefined);
     assert.equal(packaged.scripts.preinstall, undefined);
     for (const name of ['bin/tidy.js', 'LICENSE', 'NOTICE', 'README.md', 'docs/README.en.md',
-        'scripts/manage.py', 'lib/translations.json', 'dist/winubun@winubun.local.shell-extension.zip'])
+        'scripts/manage.py', 'lib/translations.json', 'lib/layouts.js', 'desktop/main.js', 'desktop/core.js',
+        'desktop/manage.js', 'desktop/native-bridge.js', 'desktop/preload.cjs', 'desktop/index.html', 'desktop/renderer.js',
+        'desktop/style.css', 'desktop/package.json', 'desktop/package-lock.json',
+        'desktop/native/macos.swift', 'docs/MACOS.md', 'dist/winubun@winubun.local.shell-extension.zip'])
         assert(existsSync(join(installedPackage, name)), name);
+    assert.deepEqual(packaged.os, ['linux', 'darwin']);
+    assert.deepEqual(JSON.parse(readFileSync(join(installedPackage, 'desktop/package.json'))).dependencies,
+        JSON.parse(readFileSync(join(root, 'desktop/package.json'))).dependencies);
     for (const name of ['.git', '.npmrc', 'tests', 'node_modules', 'schemas', 'dist/shell-verification.log'])
         assert(!existsSync(join(installedPackage, name)), name);
     const zip = join(installedPackage, 'dist/winubun@winubun.local.shell-extension.zip');

@@ -1,6 +1,6 @@
 # npm release
 
-Tidy는 **@hnode/tidy**라는 공개 npm 패키지로 배포합니다. `tidy` CLI와 미리 빌드한 GNOME 확장 ZIP을 포함하며 런타임 npm 의존성은 없습니다. 확장 ZIP에는 GPL 소스와 복구 도구가 포함됩니다.
+Tidy는 **@hnode/tidy**라는 공개 npm 패키지로 배포합니다. `tidy` CLI, GNOME 확장 ZIP과 macOS 데스크톱 앱 소스를 포함합니다. 루트 패키지에는 런타임 npm 의존성이 없고, macOS의 명시적 `tidy install` 시 별도 사용자 폴더에 고정 버전의 Electron을 설치합니다. 확장 ZIP과 데스크톱 설치에는 GPL 소스와 라이선스 파일을 포함합니다.
 
 ## Prepare
 
@@ -16,7 +16,7 @@ npm pack --pack-destination dist
 node tests/npm-package-smoke.js dist/hnode-tidy-0.19.4.tgz
 ```
 
-`prepack`이 최신 소스로 확장 ZIP을 다시 빌드합니다. 공개 파일은 `package.json`의 `files` 목록으로 제한합니다. 로그, 테스트, `.npmrc`, 캐시가 포함되지 않는지 확인하세요. npm 패키지 설치 자체는 데스크톱 설정을 바꾸지 않으며 `postinstall`은 사용하지 않습니다.
+`prepack`이 Node.js로 최신 소스의 확장 ZIP을 다시 빌드합니다. GNOME 배포용 tarball은 `glib-compile-schemas`가 있는 Linux에서 빌드해 컴파일한 스키마까지 검증하세요. macOS에서는 GLib 없이 소스 스키마를 포함한 ZIP을 만들 수 있습니다. 공개 파일은 `package.json`의 `files` 목록으로 제한합니다. `desktop/native/macos.swift`, UI와 공통 `lib/layouts.js`가 포함되는지 확인하세요. 로그, 테스트, `.npmrc`, 캐시, `node_modules`는 포함하지 않습니다. npm 패키지 설치 자체는 데스크톱 설정을 바꾸지 않으며 `postinstall`은 사용하지 않습니다.
 
 패키지 테스트는 임시 npm 전역 경로와 XDG 디렉터리를 사용합니다. 실제 tarball에서 명령을 설치한 뒤 읽기 전용 패키지, 한국어·영어 도움말, 의존성 진단과 설치된 복구 도구 호출을 확인합니다. 데스크톱 작업은 격리된 대역으로 호출을 검사합니다. Python 테스트는 실제 ZIP 설치·설정 복구를 수행하고 Shell 통신만 대체합니다.
 
@@ -50,7 +50,7 @@ tidy prefs
 tidy status
 ```
 
-최초 설치·확장 코드 업데이트 후에는 한 번 다시 로그인합니다. `npx @hnode/tidy@latest install`도 지원합니다. npm 패키지와 캐시를 삭제해도 설치된 GNOME 확장은 유지됩니다.
+GNOME에서는 최초 설치·확장 코드 업데이트 후 한 번 다시 로그인합니다. macOS는 설치 후 바로 실행되며 손쉬운 사용 권한을 설정합니다. `npx @hnode/tidy@latest install`도 지원합니다. npm 패키지와 캐시를 삭제해도 설치된 확장·앱은 유지됩니다. macOS판을 게시하기 전에는 실제 Mac에서 창 배치·단축키·자동 실행·업데이트·제거도 검증하세요.
 
 ```bash
 tidy uninstall

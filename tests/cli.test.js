@@ -38,8 +38,22 @@ test('unknown commands, unsupported platforms and root cannot change the desktop
     const {calls, options} = fixture(t);
     assert.equal(main({...options, args: ['invalid']}), 2);
     assert.equal(main({...options, args: ['install', 'extra']}), 2);
-    assert.equal(main({...options, args: ['install'], platform: 'win32'}), 1);
+    assert.equal(main({...options, args: ['install'], platform: 'freebsd'}), 1);
     assert.equal(main({...options, args: ['uninstall'], uid: 0}), 1);
+    assert.equal(calls.length, 0);
+});
+
+test('macOS dispatches every command without probing GNOME or Python', t => {
+    const {options, calls} = fixture(t);
+    const commands = ['install', 'update', 'uninstall', 'prefs', 'status', 'doctor'];
+    for (const command of commands) {
+        assert.equal(main({...options, platform: 'darwin', args: [command], desktop: (action, settings) => {
+            assert.equal(action, command);
+            assert.equal(settings.platform, 'darwin');
+            assert.equal(settings.packageRoot, options.packageRoot);
+            return 7;
+        }}), 7);
+    }
     assert.equal(calls.length, 0);
 });
 

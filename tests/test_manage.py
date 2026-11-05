@@ -80,6 +80,26 @@ class UpdateTests(unittest.TestCase):
         enabled.assert_not_called()
         self.assertFalse(manage.DEST.exists())
 
+    def test_source_only_bundle_recompiles_schemas_even_when_an_old_cache_exists(self):
+        schema = Path(__file__).resolve().parents[1] / 'schemas/org.gnome.shell.extensions.winubun.gschema.xml'
+        (manage.DEST / 'schemas').mkdir(parents=True)
+        cached = manage.DEST / 'schemas/gschemas.compiled'
+        cached.write_bytes(b'old schema cache')
+        with zipfile.ZipFile(self.archive, 'a') as archive:
+            archive.writestr('schemas/' + schema.name, schema.read_bytes())
+        actual_run = manage.run
+
+        def run(*args, **kwargs):
+            if args == ('gnome-shell', '--version'):
+                return SimpleNamespace(stdout='GNOME Shell 50.1')
+            return actual_run(*args, **kwargs)
+
+        with patch.object(manage, 'run', side_effect=run), \
+             patch.object(manage, 'extension_info', return_value={}):
+            manage.install(self.archive)
+        self.assertGreater(cached.stat().st_size, len(b'old schema cache'))
+        self.assertNotEqual(cached.read_bytes(), b'old schema cache')
+
 
 class HandoverTests(unittest.TestCase):
     uuid = 'tiling-assistant@ubuntu.com'
@@ -168,7 +188,7 @@ class PortableInstallTests(unittest.TestCase):
         self.state = self.root / 'state/winubun'
         self.autostart = self.root / 'config/autostart/winubun-update.desktop'
         project = Path(__file__).resolve().parents[1]
-        shutil.copytree(project, self.source, ignore=shutil.ignore_patterns('dist', '__pycache__', '.git'))
+        shutil.copytree(project, self.source, ignore=shutil.ignore_patterns('dist', '__pycache__', '.git', 'node_modules'))
         for name, value in {
             'ROOT': self.source, 'DEST': self.dest, 'DATA': self.data,
             'STATE': self.state, 'AUTOSTART': self.autostart,

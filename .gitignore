@@ -3,3 +3,5 @@ schemas/gschemas.compiled
 __pycache__/
 *.pyc
 *.tgz
+node_modules/
+desktop/native/tidy-native

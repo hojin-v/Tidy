@@ -2,10 +2,10 @@
 
 [한국어](../README.md) · [English](README.en.md)
 
-Window tiling for GNOME
+Window tiling for GNOME and macOS
 
 Drag a window to the top of a monitor, choose a layout, and move between monitors with keyboard shortcuts.
-Tidy adds flexible window arrangement to Ubuntu GNOME.
+Tidy arranges windows with a GNOME extension or a macOS desktop app.
 
 ![GNOME](https://img.shields.io/badge/GNOME-46%E2%80%9350-4a86cf)
 ![Session](https://img.shields.io/badge/session-Wayland-555555)
@@ -17,13 +17,15 @@ Tidy adds flexible window arrangement to Ubuntu GNOME.
 
 ## Overview
 
-Tidy is a GNOME Shell extension for arranging windows. Its layout picker opens inside the top-center area of each monitor, making it easier to use across multiple displays.
+Tidy runs as a GNOME Shell extension on Ubuntu and as a separate desktop app on macOS. Its layout picker opens inside the top-center area of each monitor, making it easier to use across multiple displays.
 
 <img src="preview.png" alt="Tidy's top layout picker with grayscale layout diagrams" width="760">
 
 The interface follows your desktop language. Korean and English are supported; other languages fall back to English.
 
 ## Features
+
+The table below describes the GNOME edition. macOS provides the six-layout picker, top dragging and edge snapping, custom shortcuts, multiple monitors, maximize/restore and window gaps. GNOME overview integration, maximize-button hover, miniature animations, linked resizing and snap assist remain GNOME features.
 
 | Feature | Behavior |
 | --- | --- |
@@ -48,11 +50,20 @@ The maximize button picker waits about 350 milliseconds before opening. Click a 
 | Ubuntu 26.04 · GNOME 50.1 · Wayland | Tested with real Wayland windows and two virtual monitors in an isolated GNOME session |
 | GNOME 46–49 | Declared compatible; not yet tested on those versions |
 | X11 | Not yet tested |
-| KDE · Xfce · Windows · macOS | Outside the supported platform |
+| macOS 13+ · Intel/Apple Silicon | Desktop app using Accessibility added; real desktop testing pending |
+| KDE · Xfce | Outside the supported platform |
 
-Runtime requirements: system Python 3 with PyGObject, GJS, and GTK 4/libadwaita. npm commands require Node.js 18 or later. Building from source also requires `glib-compile-schemas`. The installed GNOME extension does not run a Node.js or npm process.
+GNOME runtime requirements: system Python 3 with PyGObject, GJS, and GTK 4/libadwaita. GNOME npm commands require Node.js 18 or later. Building compiled schemas requires `glib-compile-schemas`. The installed GNOME extension does not run a Node.js or npm process. macOS installation requires Node.js 22.12+, npm, the Swift compiler from Xcode Command Line Tools and Accessibility permission.
 
 ## Install
+
+On macOS, use the same `tidy install` command, or `node bin/tidy.js install` from this repository. The desktop app downloads its Electron runtime, starts immediately and registers to run at login. Install Command Line Tools with `xcode-select --install` if needed, then allow Tidy under **System Settings → Privacy & Security → Accessibility** and restart it. Source files and npm caches can be deleted after installation. The logout/login and Python instructions below apply to GNOME.
+
+macOS defaults to **Control+Option**, with the placement keys listed below. Open settings using `tidy prefs` or the menu bar icon. Settings include gaps, top dragging, edge snapping, login startup and editable shortcuts. `tidy update`, `tidy status` and `tidy uninstall` work on both supported platforms. Uninstalling removes the desktop app and login item while preserving settings. Native macOS tiling, system shortcuts and Mission Control are unchanged. The GNOME-specific settings below apply only to GNOME.
+
+The shared logic, native protocol doubles, installation rollback and npm payload are tested on Ubuntu. Actual Mac window operations are not yet verified. CI is configured for Node tests and package builds on Ubuntu and macOS, plus Swift compilation and read-only protocol/UI probes on macOS. Full-screen and non-resizable windows are excluded. Minimum app sizes can limit exact placement.
+
+Desktop data lives in `~/Library/Application Support/Tidy`. Settings are in `config/settings.json`; `status.json` contains permissions, shortcut conflicts and the latest error. See [macOS implementation notes (Korean)](MACOS.md) for more details.
 
 ### npm
 
@@ -90,6 +101,8 @@ Alternatively, use [Download ZIP](https://github.com/hojin-v/Tidy/archive/refs/h
 All runtime tools are copied into the installation. **You can delete the downloaded ZIP, source folder and npm cache after installation succeeds**, even before the first logout/login.
 
 ## Quick Start
+
+Super and overview integration below are GNOME features. On macOS, use the menu bar picker, the picker shortcut, or drag a window to the top center. Click a cell when opening the picker from a shortcut; use Tab/Enter or Esc for keyboard navigation.
 
 1. Grab a window by its title bar. A thin hint appears at the top of the monitor.
 2. Drag into that area to reveal the layouts and shrink the window into a small preview. Move the pointer onto the desired layout cell.
