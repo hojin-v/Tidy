@@ -37,6 +37,9 @@ else {
             const {x, y, width, height} = node.getBoundingClientRect();
             return {zone: node.dataset.zone, x, y, width, height};
         }));
+        // Prepare hit regions before the picker is shown; a hidden window may
+        // not receive its first ResizeObserver notification until it paints.
+        regions();
         new ResizeObserver(regions).observe(root);
         window.tidy.hover(zone => document.querySelectorAll('.zone').forEach(node => node.classList.toggle('selected', node.dataset.zone === zone)));
         document.addEventListener('keydown', event => { if (event.key === 'Escape') window.tidy.close(); });

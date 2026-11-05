@@ -18,6 +18,8 @@ tidy doctor
 tidy install
 ```
 
+0.20.0 배포본을 버전 고정으로 테스트하는 절차는 [배포본 Mac 테스트](RELEASING.md#test-the-published-package-on-mac)에 있습니다. 전역 설치 없이 `npx --yes @hnode/tidy@0.20.0 install`로도 설치할 수 있습니다.
+
 소스의 변경 사항을 사용하려면 저장소에서 실행하세요.
 
 ```sh

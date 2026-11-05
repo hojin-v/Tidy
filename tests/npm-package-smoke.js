@@ -64,8 +64,13 @@ try {
         'desktop/native/macos.swift', 'docs/MACOS.md', 'dist/winubun@winubun.local.shell-extension.zip'])
         assert(existsSync(join(installedPackage, name)), name);
     assert.deepEqual(packaged.os, ['linux', 'darwin']);
-    assert.deepEqual(JSON.parse(readFileSync(join(installedPackage, 'desktop/package.json'))).dependencies,
-        JSON.parse(readFileSync(join(root, 'desktop/package.json'))).dependencies);
+    const desktop = JSON.parse(readFileSync(join(installedPackage, 'desktop/package.json')));
+    const lock = JSON.parse(readFileSync(join(installedPackage, 'desktop/package-lock.json')));
+    assert.equal(desktop.version, packaged.version, 'desktop and npm release versions must match');
+    assert.equal(lock.version, packaged.version, 'desktop lockfile version must match');
+    assert.equal(lock.packages[''].version, packaged.version, 'desktop lockfile root version must match');
+    assert.deepEqual(desktop.dependencies, JSON.parse(readFileSync(join(root, 'desktop/package.json'))).dependencies);
+    assert.deepEqual(lock.packages[''].dependencies, desktop.dependencies);
     for (const name of ['.git', '.npmrc', 'tests', 'node_modules', 'schemas', 'dist/shell-verification.log'])
         assert(!existsSync(join(installedPackage, name)), name);
     const zip = join(installedPackage, 'dist/winubun@winubun.local.shell-extension.zip');
