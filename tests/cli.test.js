@@ -28,7 +28,7 @@ test('CLI help and version work without GNOME, Python or desktop changes', t => 
     for (const args of [[], ['--help'], ['--version']])
         assert.equal(main({...options, args, platform: 'darwin'}), 0);
     assert.equal(calls.length, 0);
-    assert(messages.some(text => text.includes('npx @hnode/tidy@latest install')));
+    assert(messages.some(text => text.includes('-v, --version')));
     assert(messages.includes(JSON.parse(readFileSync(new URL('../package.json', import.meta.url))).version));
     main({...options, args: ['help'], env: {LANGUAGE: 'ko'}});
     assert(messages.at(-1).includes('사용법'));

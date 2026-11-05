@@ -16,7 +16,7 @@ export function main({args = process.argv.slice(2), env = process.env, platform 
     uid = process.getuid?.(), packageRoot = root, run = spawnSync, out = console.log, error = console.error} = {}) {
     const languages = env.LANGUAGE?.split(':') ?? [env.LC_ALL || env.LC_MESSAGES || env.LANG || 'C'];
     const _ = createTranslator(catalogs, languages);
-    const help = () => out(_('Tidy · Window tiling for GNOME\n\nUsage: tidy <command>\n\n  install     Install Tidy for the current user\n  update      Install this package version of Tidy\n  uninstall   Remove Tidy and restore desktop settings\n  prefs       Open settings and shortcuts\n  status      Show the installed extension status\n  doctor      Check system requirements\n\nInstall: npx @hnode/tidy@latest install\nAfter installation, log out and back in once.'));
+    const help = () => out(_('Tidy · Window tiling for GNOME\n\nUsage: tidy <command>\n       tidy [options]\n\nCommands:\n  install     Install Tidy for the current user\n  update      Install this package version of Tidy\n  uninstall   Remove Tidy and restore desktop settings\n  prefs       Open settings and shortcuts\n  status      Show the installed extension status\n  doctor      Check system requirements\n\nOptions:\n  -h, --help     Show this help\n  -v, --version  Show package version\n\nAfter installation, log out and back in once.'));
     if (!args.length || args[0] === 'help' || args.includes('--help') || args.includes('-h')) {
         help();
         return 0;

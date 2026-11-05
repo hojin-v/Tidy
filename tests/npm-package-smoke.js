@@ -76,7 +76,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
     assert.equal(run(command, ['--version']).trim(), manifest.version);
     assert.equal(run('npm', ['exec', '--offline', '--yes', '--package', tarball, '--', 'tidy', '--version']).trim(),
         manifest.version, 'npx/npm exec resolves the scoped package executable from its temporary cache');
-    assert(run(command, ['--help']).includes('npx @hnode/tidy@latest install'));
+    assert(run(command, ['--help']).includes('-v, --version'));
     assert(run(command, ['help'], {env: {...env, LANGUAGE: 'ko'}}).includes('사용법'));
     assert(run(command, ['doctor']).includes('requirements are available'));
     assert(!existsSync(extension), 'npm installation and help must not install a GNOME extension implicitly');
