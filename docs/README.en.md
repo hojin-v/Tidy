@@ -36,7 +36,7 @@ The table below describes the GNOME edition. macOS provides the six-layout picke
 | Custom shortcuts | Use Super+Alt for halves, quarters, thirds and two-thirds; customize the bindings in settings. |
 | Multiple monitors | Repeat an arrow shortcut to move to the monitor in that direction, including above and below. Picker size adapts to each monitor. |
 | Linked resizing | Drag shared boundaries to resize adjacent tiled windows together. Enabled by default. |
-| Optional snap assist | Choose running app icons inside empty regions to fill the remaining space. Disabled by default. |
+| Optional snap assist | Choose live window previews with titles inside empty regions. Multiple windows of the same app appear separately. Disabled by default. |
 | Size and spacing | Adjust picker sizes and window gaps, including a separate overview picker size. |
 
 The 100% picker size now matches the previous 115% size. Saved sizes are converted to the new reference. Top/bottom and maximize cards are removed, and a **¼ · ½ · ¼** layout sits immediately to the right of equal thirds. Maximize shortcuts and top-edge maximization remain available. Automatic sizing preserves the 16-inch built-in reference; on a 32-inch external monitor, the new 100% matches approximately 80% of the previous automatic size.
@@ -112,7 +112,7 @@ Press **Super** to open window overview and the single-row layout picker togethe
 
 Window previews shrink as soon as you start dragging in window overview, and return to their original size on release or cancellation. Dropping a window into a layout continues directly from the miniature to its final placement.
 
-With snap assist enabled, select an app icon in an empty region to tile its window there. Click the current window or another area, or press Esc, to finish without any additional placements.
+With snap assist enabled, select a live window preview in an empty region to tile that exact window there. Each window has its own preview and title, including multiple windows of the same app. Scroll within the region if there are many windows. Minimized windows are restored only when selected. Click the current window or another area, or press Esc, to finish without any additional placements.
 
 The picker slides down using Ubuntu Dock's animation duration and curve. Leaving the selection area restores the window's size; dropping onto a cell animates directly from the miniature to its destination.
 
@@ -148,7 +148,7 @@ Open **Tidy** from the application list, or choose **Settings and shortcuts…**
 - **Adapt picker size to each monitor** keeps the built-in display as the baseline and gently enlarges the picker on larger external displays. Enabled by default.
 - **Layout picker size / Overview picker size** default to equal sizes. The overview picker has its own relative size setting.
 - **Match activation width to picker** keeps the activation area and drag hint aligned with the picker on each monitor. Enabled by default; turn it off to use your custom width.
-- **Choose windows for the remaining space** shows running app icons in empty layout regions. Disabled by default.
+- **Choose windows for the remaining space** shows live window previews and titles in empty layout regions. Disabled by default.
 
 Open settings or check status from the CLI:
 

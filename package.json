@@ -1,6 +1,6 @@
 {
   "name": "@hnode/tidy",
-  "version": "0.20.0",
+  "version": "0.20.1",
   "description": "Window tiling for GNOME and macOS with a layout picker, custom shortcuts and multi-monitor support",
   "type": "module",
   "bin": {

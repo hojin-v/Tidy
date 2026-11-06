@@ -40,7 +40,11 @@
     border-radius: 16px;
 }
 .wintiling-assist-grid, .wintiling-assist-row { spacing: 12px; }
-.wintiling-assist-app { border-radius: 14px; padding: 10px; transition-duration: 120ms; }
-.wintiling-assist-app:hover, .wintiling-assist-app:focus {
+.wintiling-assist-window { border-radius: 14px; padding: 8px; transition-duration: 120ms; }
+.wintiling-assist-window:hover, .wintiling-assist-window:focus {
     background-color: rgba(255, 255, 255, 0.16);
 }
+.wintiling-assist-content { spacing: 8px; }
+.wintiling-assist-thumbnail { background-color: rgba(0, 0, 0, 0.24); border-radius: 6px; }
+.wintiling-assist-caption { spacing: 8px; }
+.wintiling-assist-title { color: #f3f3f3; font-size: 11px; }
