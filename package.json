@@ -22,7 +22,7 @@
     "scripts/manage.py",
     "scripts/i18n.py",
     "scripts/recover.js",
-    "dist/tidy@hnode.dev.shell-extension.zip",
+    "dist/tidy@hnode.shell-extension.zip",
     "docs/README.en.md",
     "docs/DEVELOPMENT.md",
     "docs/MACOS.md",

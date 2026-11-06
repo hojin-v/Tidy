@@ -16,7 +16,7 @@ npm run check
 npm run test:package
 ```
 
-빌드 결과는 `dist/tidy@hnode.dev.shell-extension.zip`입니다. 런타임 소스, 컴파일한 스키마, 설치·복구 도구와 GPL 라이선스 파일을 포함합니다.
+빌드 결과는 `dist/tidy@hnode.shell-extension.zip`입니다. 런타임 소스, 컴파일한 스키마, 설치·복구 도구와 GPL 라이선스 파일을 포함합니다.
 
 npm 배포 이름은 `@hnode/tidy`이고 실행 파일은 `bin/tidy.js`입니다. `npm pack`은 `prepack`에서 Node.js로 확장 ZIP을 빌드합니다. 이 빌드는 macOS에서도 Python 없이 동작합니다. GLib 컴파일러가 없는 환경에서는 XML 스키마를 포함하고 GNOME 설치 시 컴파일합니다. 사용자 설치 시에는 이 ZIP을 사용하므로 npm 패키지 경로가 읽기 전용이어도 됩니다. 게시 절차와 tarball 검증은 [Releasing](RELEASING.md)을 참고하세요.
 
@@ -28,6 +28,7 @@ npm 배포 이름은 `@hnode/tidy`이고 실행 파일은 `bin/tidy.js`입니다
 GSETTINGS_BACKEND=memory GSETTINGS_SCHEMA_DIR="$PWD/schemas" gjs -m tests/lease-smoke.js
 /usr/bin/python3 scripts/test-shell.py
 /usr/bin/python3 scripts/test-shell.py --migration-only
+TIDY_TEST_LEGACY_UUID=tidy@hnode.dev /usr/bin/python3 scripts/test-shell.py --migration-only
 ```
 
 Shell 통합 테스트는 GNOME 50의 `gnome-shell-test-tool`과 가상 모니터를 지원하는 그래픽 환경이 필요합니다. 별도 D-Bus, 런타임 디렉터리, 설정 저장소와 헤드리스 Wayland 세션에서 동작합니다.
@@ -52,7 +53,7 @@ Ubuntu Dock이 설치된 환경에서는 `TIDY_TEST_UBUNTU_DOCK=1 /usr/bin/pytho
 - 제거 전 확장 종료 확인, 기존 확장 복원 상태 검증과 삭제된 사용자 확장의 시스템 원본을 다음 로그인에 복원
 - npm tarball 전역 설치, 읽기 전용 패키지, CLI 언어·의존성 검사와 설치된 복구 도구 연결
 - 확장 재활성화·빠른 켜기/끄기, 예약 작업 취소와 데스크톱 설정 복원
-- `winubun@winubun.local`에서 `tidy@hnode.dev`로 이전, 이전 확장 종료·제거와 설정 유지, 업데이트 후 재로그인 안내
+- `winubun@winubun.local`에서 `tidy@hnode`로 이전, 이전 확장 종료·제거와 설정 유지, 업데이트 후 재로그인 안내
 - 상단 한 행 선택기와 최대화 버튼 3열 × 2행 선택기의 개별 배치·클릭·드래그
 - Super+A 앱 목록에서 선택기·드롭 영역·추가 검색 여백 해제와 창 보기 복귀
 - 중첩된 Chromium 제목 표시줄, 한국어 ‘복구’ 버튼, 창 그림자를 포함한 접근성 좌표 변환
@@ -67,7 +68,7 @@ Ubuntu Dock이 설치된 환경에서는 `TIDY_TEST_UBUNTU_DOCK=1 /usr/bin/pytho
 
 | 경로 | 용도 |
 | --- | --- |
-| `~/.local/share/gnome-shell/extensions/tidy@hnode.dev/` | 확장과 설치된 관리 도구 |
+| `~/.local/share/gnome-shell/extensions/tidy@hnode/` | 확장과 설치된 관리 도구 |
 | `~/.local/share/applications/winubun.desktop` | Tidy 실행기 |
 | `~/.local/state/winubun/launcher.log` | 실행 오류 |
 | `~/.local/state/winubun/preferences.log` | 설정 앱 로그 |
@@ -75,7 +76,7 @@ Ubuntu Dock이 설치된 환경에서는 `TIDY_TEST_UBUNTU_DOCK=1 /usr/bin/pytho
 
 ```bash
 gnome-shell --version
-gnome-extensions info tidy@hnode.dev
+gnome-extensions info tidy@hnode
 journalctl --user -b --no-pager -g 'Tidy|winubun|JS ERROR'
 ```
 

@@ -7,8 +7,8 @@ import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import {_} from '../lib/i18n.js';
 
 Gio._promisify(Gio.Subprocess.prototype, 'communicate_utf8_async', 'communicate_utf8_finish');
-const legacyUuid = 'winubun@winubun.local';
-const uuid = 'tidy@hnode.dev';
+const legacyUuid = GLib.getenv('TIDY_TEST_LEGACY_UUID') ?? 'winubun@winubun.local';
+const uuid = 'tidy@hnode';
 const read = file => new TextDecoder().decode(file.load_contents(null)[1]);
 const assert = (condition, message) => {
     if (!condition) throw new Error(message);

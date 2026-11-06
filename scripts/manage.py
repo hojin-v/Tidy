@@ -14,8 +14,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from i18n import _
 
 ROOT = Path(__file__).resolve().parent.parent
-UUID = 'tidy@hnode.dev'
-LEGACY_UUID = 'winubun@winubun.local'
+UUID = 'tidy@hnode'
+LEGACY_UUIDS = ('winubun@winubun.local', 'tidy@hnode.dev')
 DATA = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share'))
 STATE = Path(os.environ.get('XDG_STATE_HOME', Path.home() / '.local/state')) / 'winubun'
 DEST = DATA / 'gnome-shell/extensions' / UUID
@@ -129,24 +129,32 @@ def recover_settings(directory):
 
 
 def migrate_legacy():
-    legacy = DATA / 'gnome-shell/extensions' / LEGACY_UUID
-    if legacy.is_symlink():
-        raise RuntimeError(_('Manage symlink installations manually: {path}', path=legacy))
-    registered = extension_info(LEGACY_UUID)
-    if not registered and not legacy.exists():
+    installations = []
+    for uuid in LEGACY_UUIDS:
+        legacy = DATA / 'gnome-shell/extensions' / uuid
+        if legacy.is_symlink():
+            raise RuntimeError(_('Manage symlink installations manually: {path}', path=legacy))
+        registered = extension_info(uuid)
+        if not registered and not legacy.exists():
+            continue
+        if registered:
+            set_enabled(uuid, False)
+            wait_for_extension(uuid, False)
+        installations.append((uuid, legacy, registered))
+    if not installations:
         return False
-    if registered:
-        set_enabled(LEGACY_UUID, False)
-        wait_for_extension(LEGACY_UUID, False)
     # Keep the original schema and state directory so custom shortcuts and the
-    # settings recovery journal survive the UUID change.
-    recover_settings(legacy)
+    # settings recovery journal survive the UUID change. Stop all old copies
+    # before recovering shared settings or restoring another tiler.
+    for _uuid, legacy, _registered in installations:
+        recover_settings(legacy)
     restore_competitors()
-    if registered and registered.get('type') != 1:
-        if not shell_call('UninstallExtension', '(s)', (LEGACY_UUID,))[0]:
-            raise RuntimeError(_('GNOME could not remove the previous Tidy extension.'))
-    if legacy.exists():
-        shutil.rmtree(legacy)
+    for uuid, legacy, registered in installations:
+        if registered and registered.get('type') != 1:
+            if not shell_call('UninstallExtension', '(s)', (uuid,))[0]:
+                raise RuntimeError(_('GNOME could not remove the previous Tidy extension.'))
+        if legacy.exists():
+            shutil.rmtree(legacy)
     print(_('Moved Tidy to {uuid}. Your settings and custom shortcuts have been kept.', uuid=UUID))
     return True
 
@@ -223,9 +231,10 @@ def install(archive=None):
             raise RuntimeError(_('The bundled extension does not match this installer. Download Tidy again.'))
     if DEST.is_symlink():
         raise RuntimeError(_('Manage symlink installations manually: {path}', path=DEST))
-    legacy = DATA / 'gnome-shell/extensions' / LEGACY_UUID
-    if legacy.is_symlink():
-        raise RuntimeError(_('Manage symlink installations manually: {path}', path=legacy))
+    for uuid in LEGACY_UUIDS:
+        legacy = DATA / 'gnome-shell/extensions' / uuid
+        if legacy.is_symlink():
+            raise RuntimeError(_('Manage symlink installations manually: {path}', path=legacy))
     # The session may need to discover a first installation at the next login.
     # Keep the original tiler active until Tidy is actually available.
     registered = extension_info()

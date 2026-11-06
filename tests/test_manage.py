@@ -46,7 +46,7 @@ class UpdateTests(unittest.TestCase):
         output = io.StringIO()
         with patch.object(manage, 'build', return_value=self.archive), \
              patch.object(manage, 'run', return_value=SimpleNamespace(stdout='GNOME Shell 50.1')), \
-             patch.object(manage, 'extension_info', side_effect=[{'version': 1, 'state': 1}, {'version': 1, 'state': 2}, {}]), \
+             patch.object(manage, 'extension_info', side_effect=[{'version': 1, 'state': 1}, {'version': 1, 'state': 2}, {}, {}]), \
              patch.object(manage, 'set_enabled') as enabled, \
              patch.object(manage, 'activate') as activate, redirect_stdout(output):
             manage.install()
@@ -61,7 +61,7 @@ class UpdateTests(unittest.TestCase):
 
     def test_reinstalling_loaded_code_still_explains_when_logout_is_required(self):
         output = io.StringIO()
-        info = lambda uuid=manage.UUID: {} if uuid == manage.LEGACY_UUID else {'version': 2, 'state': 2}
+        info = lambda uuid=manage.UUID: {'version': 2, 'state': 2} if uuid == manage.UUID else {}
         with patch.object(manage, 'run', return_value=SimpleNamespace(stdout='GNOME Shell 50.1')), \
              patch.object(manage, 'extension_info', side_effect=info), \
              patch.object(manage, 'set_enabled'), patch.object(manage, 'activate') as activate, redirect_stdout(output):
@@ -88,17 +88,45 @@ class UpdateTests(unittest.TestCase):
                 self.assertEqual('[Login required]' in notice.getvalue(), info.get('version') != 2)
 
     def test_uuid_migration_stops_and_removes_legacy_and_preserves_settings_storage(self):
-        legacy = manage.DATA / 'gnome-shell/extensions' / manage.LEGACY_UUID
+        self._assert_uuid_migration_preserves_settings('winubun@winubun.local')
+
+    def test_domain_uuid_migrates_to_short_uuid_and_preserves_settings(self):
+        self._assert_uuid_migration_preserves_settings('tidy@hnode.dev')
+
+    def test_all_previous_identities_stop_before_shared_settings_are_recovered(self):
+        registered = {uuid: {'state': 1, 'type': 2} for uuid in manage.LEGACY_UUIDS}
+        for uuid in registered:
+            (manage.DATA / 'gnome-shell/extensions' / uuid).mkdir(parents=True)
+
+        def enabled(uuid, value):
+            registered[uuid]['state'] = 1 if value else 2
+
+        def recover(_directory):
+            self.assertTrue(all(info['state'] == 2 for info in registered.values()))
+
+        with patch.object(manage, 'run', return_value=SimpleNamespace(stdout='GNOME Shell 50.1')), \
+             patch.object(manage, 'extension_info', side_effect=lambda uuid=manage.UUID: registered.get(uuid, {})), \
+             patch.object(manage, 'set_enabled', side_effect=enabled), \
+             patch.object(manage, 'recover_settings', side_effect=recover), \
+             patch.object(manage, 'shell_call', return_value=(True,)) as shell:
+            manage.install(self.archive)
+        self.assertEqual(shell.call_count, 2)
+        for uuid in manage.LEGACY_UUIDS:
+            shell.assert_any_call('UninstallExtension', '(s)', (uuid,))
+            self.assertFalse((manage.DATA / 'gnome-shell/extensions' / uuid).exists())
+
+    def _assert_uuid_migration_preserves_settings(self, legacy_uuid):
+        legacy = manage.DATA / 'gnome-shell/extensions' / legacy_uuid
         (legacy / 'schemas').mkdir(parents=True)
         (legacy / 'scripts').mkdir()
         (legacy / 'scripts/recover.js').write_text('// legacy recovery tool')
-        (legacy / 'metadata.json').write_text(json.dumps(dict(self.metadata, uuid=manage.LEGACY_UUID)))
+        (legacy / 'metadata.json').write_text(json.dumps(dict(self.metadata, uuid=legacy_uuid)))
         manage.STATE.mkdir()
         preserved = manage.STATE / 'preferences.log'
         preserved.write_text('preserve existing state')
         competitor = manage.COMPETITORS[0]
         (manage.STATE / 'handover.json').write_text(json.dumps([competitor]))
-        registered = {manage.LEGACY_UUID: {'state': 1, 'type': 2}, competitor: {'state': 2}}
+        registered = {legacy_uuid: {'state': 1, 'type': 2}, competitor: {'state': 2}}
 
         def enabled(uuid, value):
             registered[uuid]['state'] = 1 if value else 2
@@ -110,23 +138,23 @@ class UpdateTests(unittest.TestCase):
              patch.object(manage, 'shell_call', return_value=(True,)) as shell, \
              patch.object(manage.subprocess, 'run') as recovery, redirect_stdout(output):
             manage.install(self.archive)
-        toggle.assert_any_call(manage.LEGACY_UUID, False)
+        toggle.assert_any_call(legacy_uuid, False)
         toggle.assert_any_call(competitor, True)
-        shell.assert_called_once_with('UninstallExtension', '(s)', (manage.LEGACY_UUID,))
+        shell.assert_called_once_with('UninstallExtension', '(s)', (legacy_uuid,))
         self.assertEqual(recovery.call_args.args[0], ['gjs', '-m', str(legacy / 'scripts/recover.js')])
         self.assertEqual(recovery.call_args.kwargs['env']['GSETTINGS_SCHEMA_DIR'], str(legacy / 'schemas'))
         self.assertFalse(legacy.exists())
         metadata = json.loads((manage.DEST / 'metadata.json').read_text())
-        self.assertEqual(metadata['uuid'], 'tidy@hnode.dev')
+        self.assertEqual(metadata['uuid'], 'tidy@hnode')
         self.assertEqual(metadata['settings-schema'], self.metadata['settings-schema'])
         self.assertEqual(preserved.read_text(), 'preserve existing state')
         self.assertIn(str(manage.DEST / 'scripts/manage.py'), manage.AUTOSTART.read_text())
         self.assertIn('[Login required]', output.getvalue())
 
     def test_failed_legacy_removal_keeps_old_files_and_does_not_schedule_new_activation(self):
-        legacy = manage.DATA / 'gnome-shell/extensions' / manage.LEGACY_UUID
+        legacy = manage.DATA / 'gnome-shell/extensions' / manage.LEGACY_UUIDS[0]
         legacy.mkdir(parents=True)
-        info = lambda uuid=manage.UUID: {'state': 2, 'type': 2} if uuid == manage.LEGACY_UUID else {}
+        info = lambda uuid=manage.UUID: {'state': 2, 'type': 2} if uuid == manage.LEGACY_UUIDS[0] else {}
         with patch.object(manage, 'run', return_value=SimpleNamespace(stdout='GNOME Shell 50.1')), \
              patch.object(manage, 'extension_info', side_effect=info), \
              patch.object(manage, 'set_enabled'), patch.object(manage, 'shell_call', return_value=(False,)):
@@ -136,7 +164,7 @@ class UpdateTests(unittest.TestCase):
         self.assertFalse(manage.AUTOSTART.exists())
 
     def test_legacy_symlinks_are_rejected_before_stopping_or_replacing_any_extension(self):
-        legacy = manage.DATA / 'gnome-shell/extensions' / manage.LEGACY_UUID
+        legacy = manage.DATA / 'gnome-shell/extensions' / manage.LEGACY_UUIDS[0]
         legacy.parent.mkdir(parents=True)
         legacy.symlink_to(self.root, target_is_directory=True)
         with patch.object(manage, 'run', return_value=SimpleNamespace(stdout='GNOME Shell 50.1')), \

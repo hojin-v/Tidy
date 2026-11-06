@@ -10,9 +10,9 @@ function fixture(t) {
     t.after(() => rmSync(directory, {recursive: true, force: true}));
     const packageRoot = join(directory, 'npm package');
     const data = join(directory, 'user data $literal');
-    const installed = join(data, 'gnome-shell/extensions/tidy@hnode.dev/scripts/manage.py');
+    const installed = join(data, 'gnome-shell/extensions/tidy@hnode/scripts/manage.py');
     mkdirSync(join(packageRoot, 'dist'), {recursive: true});
-    writeFileSync(join(packageRoot, 'dist/tidy@hnode.dev.shell-extension.zip'), 'fixture');
+    writeFileSync(join(packageRoot, 'dist/tidy@hnode.shell-extension.zip'), 'fixture');
     const calls = [];
     const messages = [];
     const options = {packageRoot, platform: 'linux', uid: 1000, env: {LANGUAGE: 'en', XDG_DATA_HOME: data},
@@ -66,7 +66,7 @@ test('install and update use the bundled ZIP and packaged installer with literal
         const last = calls.at(-1);
         assert.equal(last.command, '/usr/bin/python3');
         assert.deepEqual(last.args, [join(packageRoot, 'scripts/manage.py'), 'install', '--archive',
-            join(packageRoot, 'dist/tidy@hnode.dev.shell-extension.zip')]);
+            join(packageRoot, 'dist/tidy@hnode.shell-extension.zip')]);
         assert.equal(last.settings.stdio, 'inherit');
         assert.equal(last.settings.env.PYTHONDONTWRITEBYTECODE, '1');
         assert(!last.settings.shell);
@@ -85,12 +85,14 @@ test('settings, status and removal use the installed recovery tools after npm up
 
 test('legacy installations remain manageable before migration and the new UUID takes precedence', t => {
     const {installed, calls, options} = fixture(t);
-    const legacy = join(options.env.XDG_DATA_HOME, 'gnome-shell/extensions/winubun@winubun.local/scripts/manage.py');
-    mkdirSync(join(legacy, '..'), {recursive: true});
-    writeFileSync(legacy, 'legacy recovery tools');
-    for (const command of ['prefs', 'status', 'uninstall']) {
-        assert.equal(main({...options, args: [command]}), 0);
-        assert.deepEqual(calls.at(-1).args, [legacy, command]);
+    for (const uuid of ['winubun@winubun.local', 'tidy@hnode.dev']) {
+        const legacy = join(options.env.XDG_DATA_HOME, 'gnome-shell/extensions', uuid, 'scripts/manage.py');
+        mkdirSync(join(legacy, '..'), {recursive: true});
+        writeFileSync(legacy, 'legacy recovery tools');
+        for (const command of ['prefs', 'status', 'uninstall']) {
+            assert.equal(main({...options, args: [command]}), 0);
+            assert.deepEqual(calls.at(-1).args, [legacy, command]);
+        }
     }
     mkdirSync(join(installed, '..'), {recursive: true});
     writeFileSync(installed, 'current recovery tools');

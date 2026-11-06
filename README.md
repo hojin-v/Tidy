@@ -159,7 +159,7 @@ tidy status
 CLI 없이 설치된 관리 도구를 직접 실행할 수도 있습니다. 원본 소스 폴더는 필요하지 않습니다.
 
 ```bash
-tidy_manager="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/tidy@hnode.dev/scripts/manage.py"
+tidy_manager="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/tidy@hnode/scripts/manage.py"
 /usr/bin/python3 "$tidy_manager" prefs
 /usr/bin/python3 "$tidy_manager" status
 ```
@@ -198,14 +198,14 @@ npx로 설치했다면 `npx @hnode/tidy@latest uninstall`을 사용하세요. **
 CLI가 없어도 어느 폴더에서든 설치된 도구로 제거할 수 있습니다.
 
 ```bash
-/usr/bin/python3 "${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/tidy@hnode.dev/scripts/manage.py" uninstall
+/usr/bin/python3 "${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/tidy@hnode/scripts/manage.py" uninstall
 ```
 
 확장과 앱 실행기를 제거하고, 변경했던 GNOME 설정과 기존 타일링 확장 상태를 복원합니다. Tidy의 사용자 설정과 단축키는 재설치를 위해 보관합니다.
 
 기존 타일링 확장의 사용자 설치본을 삭제하여 현재 세션에서 인식되지 않는 경우, 남아 있는 시스템 원본을 다음 로그인에 활성화하도록 설정하고 Tidy 제거를 완료합니다. 이 경우 출력 안내에 따라 다시 로그인하세요. 이전 확장이 시스템에서도 제거됐다면 재설치하지 않습니다.
 
-확장 관리자에 표시되는 UUID는 `tidy@hnode.dev`입니다. `tidy update`는 기존 `winubun@winubun.local` 설치를 새 UUID로 이전합니다. 기존 설정과 단축키는 유지하며, 설정 저장소·상태 폴더·고정한 실행기 파일의 `winubun` 이름은 호환성을 위해 유지합니다.
+확장 관리자에 표시되는 UUID는 `tidy@hnode`입니다. `tidy update`는 기존 `winubun@winubun.local` 또는 `tidy@hnode.dev` 설치를 새 UUID로 이전합니다. 기존 설정과 단축키는 유지하며, 설정 저장소·상태 폴더·고정한 실행기 파일의 `winubun` 이름은 호환성을 위해 유지합니다.
 
 ## Notes
 

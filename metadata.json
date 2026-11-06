@@ -1,5 +1,5 @@
 {
-  "uuid": "tidy@hnode.dev",
+  "uuid": "tidy@hnode",
   "name": "Tidy",
   "description": "Top layout picker, optional snap assist, and customizable window tiling shortcuts",
   "shell-version": [

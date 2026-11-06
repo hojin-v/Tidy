@@ -24,12 +24,16 @@ with tempfile.TemporaryDirectory(prefix='winubun-runtime-') as runtime:
     if options.migration_only:
         # Runtime code is independent of the UUID. Start under the old identity
         # so the current installer must perform the real disable/uninstall flow.
+        legacy_uuid = os.environ.get('TIDY_TEST_LEGACY_UUID', 'winubun@winubun.local')
+        if legacy_uuid not in ('winubun@winubun.local', 'tidy@hnode.dev'):
+            parser.error('TIDY_TEST_LEGACY_UUID must name a supported previous UUID')
         legacy_archive = Path(runtime) / 'legacy.shell-extension.zip'
         with zipfile.ZipFile(archive) as source, zipfile.ZipFile(legacy_archive, 'w', zipfile.ZIP_DEFLATED) as legacy:
             for name in source.namelist():
                 contents = source.read(name)
                 if name == 'metadata.json':
-                    contents = json.dumps(dict(metadata, uuid='winubun@winubun.local', version=23)).encode()
+                    contents = json.dumps(dict(metadata, uuid=legacy_uuid,
+                        version=24 if legacy_uuid == 'tidy@hnode.dev' else 23)).encode()
                 legacy.writestr(name, contents)
         archive = legacy_archive
     env = dict(os.environ, XDG_RUNTIME_DIR=runtime, XDG_STATE_HOME=f'{runtime}/state', NO_AT_BRIDGE='1',

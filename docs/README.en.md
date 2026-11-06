@@ -160,7 +160,7 @@ tidy status
 You can also use the installed management tool directly. The source folder is not needed:
 
 ```bash
-tidy_manager="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/tidy@hnode.dev/scripts/manage.py"
+tidy_manager="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/tidy@hnode/scripts/manage.py"
 /usr/bin/python3 "$tidy_manager" prefs
 /usr/bin/python3 "$tidy_manager" status
 ```
@@ -199,14 +199,14 @@ For npx installations, use `npx @hnode/tidy@latest uninstall`. **Removing only t
 Without the CLI, run the installed tool from any directory:
 
 ```bash
-/usr/bin/python3 "${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/tidy@hnode.dev/scripts/manage.py" uninstall
+/usr/bin/python3 "${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/tidy@hnode/scripts/manage.py" uninstall
 ```
 
 This removes the extension and application launcher and restores the GNOME settings and competing tiling-extension state that Tidy changed. Tidy's custom settings and shortcuts are kept for reinstallation.
 
 If removing a user-installed tiling extension made its UUID unavailable in the current session, the uninstaller enables any remaining system copy for the next login and completes Tidy removal. Log out and back in when prompted. An extension removed from the system entirely is not reinstalled.
 
-The UUID shown in extension managers is `tidy@hnode.dev`. `tidy update` migrates an existing `winubun@winubun.local` installation to the new UUID and preserves settings and shortcuts. The settings schema, state directory and launcher retain their internal `winubun` names for compatibility.
+The UUID shown in extension managers is `tidy@hnode`. `tidy update` migrates an existing `winubun@winubun.local` or `tidy@hnode.dev` installation to the new UUID and preserves settings and shortcuts. The settings schema, state directory and launcher retain their internal `winubun` names for compatibility.
 
 ## Notes
 
