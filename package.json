@@ -1,6 +1,6 @@
 {
   "name": "@hnode/tidy",
-  "version": "0.20.1",
+  "version": "0.20.2",
   "description": "Window tiling for GNOME and macOS with a layout picker, custom shortcuts and multi-monitor support",
   "type": "module",
   "bin": {
@@ -22,7 +22,7 @@
     "scripts/manage.py",
     "scripts/i18n.py",
     "scripts/recover.js",
-    "dist/winubun@winubun.local.shell-extension.zip",
+    "dist/tidy@hnode.dev.shell-extension.zip",
     "docs/README.en.md",
     "docs/DEVELOPMENT.md",
     "docs/MACOS.md",

@@ -13,7 +13,7 @@ const prefix = join(directory, 'global prefix');
 const installedPackage = join(prefix, 'lib/node_modules/@hnode/tidy');
 const data = join(directory, 'user data');
 const state = join(directory, 'user state');
-const extension = join(data, 'gnome-shell/extensions/winubun@winubun.local');
+const extension = join(data, 'gnome-shell/extensions/tidy@hnode.dev');
 const env = {...process.env, LANGUAGE: 'en', XDG_DATA_HOME: data, XDG_STATE_HOME: state,
     XDG_CONFIG_HOME: join(directory, 'user config'), npm_config_cache: join(directory, 'npm cache')};
 const run = (command, args, options = {}) => {
@@ -61,7 +61,7 @@ try {
         'scripts/manage.py', 'lib/translations.json', 'lib/layouts.js', 'desktop/main.js', 'desktop/core.js',
         'desktop/manage.js', 'desktop/native-bridge.js', 'desktop/preload.cjs', 'desktop/index.html', 'desktop/renderer.js',
         'desktop/style.css', 'desktop/package.json', 'desktop/package-lock.json',
-        'desktop/native/macos.swift', 'docs/MACOS.md', 'dist/winubun@winubun.local.shell-extension.zip'])
+        'desktop/native/macos.swift', 'docs/MACOS.md', 'dist/tidy@hnode.dev.shell-extension.zip'])
         assert(existsSync(join(installedPackage, name)), name);
     assert.deepEqual(packaged.os, ['linux', 'darwin']);
     const desktop = JSON.parse(readFileSync(join(installedPackage, 'desktop/package.json')));
@@ -73,7 +73,7 @@ try {
     assert.deepEqual(lock.packages[''].dependencies, desktop.dependencies);
     for (const name of ['.git', '.npmrc', 'tests', 'node_modules', 'schemas', 'dist/shell-verification.log'])
         assert(!existsSync(join(installedPackage, name)), name);
-    const zip = join(installedPackage, 'dist/winubun@winubun.local.shell-extension.zip');
+    const zip = join(installedPackage, 'dist/tidy@hnode.dev.shell-extension.zip');
     run('/usr/bin/python3', ['-c', `import json, sys, zipfile
 from pathlib import Path
 with zipfile.ZipFile(sys.argv[1]) as archive:

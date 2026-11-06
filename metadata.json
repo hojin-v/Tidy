@@ -1,5 +1,5 @@
 {
-  "uuid": "winubun@winubun.local",
+  "uuid": "tidy@hnode.dev",
   "name": "Tidy",
   "description": "Top layout picker, optional snap assist, and customizable window tiling shortcuts",
   "shell-version": [
@@ -10,6 +10,6 @@
     "50"
   ],
   "settings-schema": "org.gnome.shell.extensions.winubun",
-  "version": 23,
+  "version": 24,
   "url": "https://github.com/hojin-v/Tidy"
 }

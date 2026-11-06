@@ -14,7 +14,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from i18n import _
 
 ROOT = Path(__file__).resolve().parent.parent
-UUID = 'winubun@winubun.local'
+UUID = 'tidy@hnode.dev'
+LEGACY_UUID = 'winubun@winubun.local'
 DATA = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share'))
 STATE = Path(os.environ.get('XDG_STATE_HOME', Path.home() / '.local/state')) / 'winubun'
 DEST = DATA / 'gnome-shell/extensions' / UUID
@@ -109,6 +110,47 @@ def finish_update():
     AUTOSTART.unlink(missing_ok=True)
 
 
+def print_update_notice(requires_login, stream=None):
+    stream = stream or sys.stdout
+    print(file=stream)
+    if requires_login:
+        print(_('[Login required] Log out and log back in to apply the update.'), file=stream)
+        print(_('Tidy will start automatically at the next login. Turning the extension off and on does not apply the new code.'), file=stream)
+    else:
+        print(_('[Update notice] GNOME extension code updates require logging out and back in.'), file=stream)
+        print(_('This extension code version is already loaded, so no logout is needed this time.'), file=stream)
+
+
+def recover_settings(directory):
+    schema_dir = directory / 'schemas'
+    if schema_dir.exists():
+        env = dict(os.environ, GSETTINGS_SCHEMA_DIR=str(schema_dir))
+        subprocess.run(['gjs', '-m', str(directory / 'scripts/recover.js')], env=env, check=True)
+
+
+def migrate_legacy():
+    legacy = DATA / 'gnome-shell/extensions' / LEGACY_UUID
+    if legacy.is_symlink():
+        raise RuntimeError(_('Manage symlink installations manually: {path}', path=legacy))
+    registered = extension_info(LEGACY_UUID)
+    if not registered and not legacy.exists():
+        return False
+    if registered:
+        set_enabled(LEGACY_UUID, False)
+        wait_for_extension(LEGACY_UUID, False)
+    # Keep the original schema and state directory so custom shortcuts and the
+    # settings recovery journal survive the UUID change.
+    recover_settings(legacy)
+    restore_competitors()
+    if registered and registered.get('type') != 1:
+        if not shell_call('UninstallExtension', '(s)', (LEGACY_UUID,))[0]:
+            raise RuntimeError(_('GNOME could not remove the previous Tidy extension.'))
+    if legacy.exists():
+        shutil.rmtree(legacy)
+    print(_('Moved Tidy to {uuid}. Your settings and custom shortcuts have been kept.', uuid=UUID))
+    return True
+
+
 def run(*args, check=True):
     return subprocess.run(args, check=check, text=True, capture_output=True,
         env=dict(os.environ, LC_ALL='C'))
@@ -181,6 +223,9 @@ def install(archive=None):
             raise RuntimeError(_('The bundled extension does not match this installer. Download Tidy again.'))
     if DEST.is_symlink():
         raise RuntimeError(_('Manage symlink installations manually: {path}', path=DEST))
+    legacy = DATA / 'gnome-shell/extensions' / LEGACY_UUID
+    if legacy.is_symlink():
+        raise RuntimeError(_('Manage symlink installations manually: {path}', path=legacy))
     # The session may need to discover a first installation at the next login.
     # Keep the original tiler active until Tidy is actually available.
     registered = extension_info()
@@ -197,14 +242,16 @@ def install(archive=None):
         package.extractall(DEST)
         if 'schemas/gschemas.compiled' not in package.namelist():
             run('glib-compile-schemas', '--strict', str(DEST / 'schemas'))
+    migrated = migrate_legacy()
     install_launcher()
     if not registered or registered.get('version') != metadata['version']:
         schedule_update(metadata['version'])
-        print(_('The new version is installed. GNOME cannot reload cached JavaScript during the current session.'))
-        print(_('Log out and log back in once to activate the new Tidy automatically.'))
-        print(_('The previous Tidy has been stopped for this session.'))
+        if registered or migrated:
+            print(_('The previous Tidy has been stopped for this session.'))
+        print_update_notice(True)
         return
     activate()
+    print_update_notice(False)
 
 
 def activate():
@@ -252,6 +299,16 @@ def apply_update():
     raise RuntimeError(_('GNOME has not registered Tidy yet. Launch Tidy from the app list.'))
 
 
+def status():
+    info = extension_info()
+    print(json.dumps(info, ensure_ascii=False, indent=2) if info else _('The extension is not registered in the current session.'))
+    if (STATE / 'pending-update.json').exists():
+        expected = json.loads((DEST / 'metadata.json').read_text())['version']
+        if info.get('version') != expected:
+            # Keep stdout machine-readable when GNOME returned a JSON status.
+            print_update_notice(True, sys.stderr)
+
+
 def uninstall():
     if DEST.is_symlink():
         raise RuntimeError(_('Remove symlink installations manually: {path}', path=DEST))
@@ -262,10 +319,7 @@ def uninstall():
     elif DEST.exists():
         print(_('The extension is not registered in this session. Checking settings recovery.'))
     # Also recover settings if a Shell crash prevented disable() from running.
-    schema_dir = DEST / 'schemas'
-    if schema_dir.exists():
-        env = dict(os.environ, GSETTINGS_SCHEMA_DIR=str(schema_dir))
-        subprocess.run(['gjs', '-m', str(DEST / 'scripts/recover.js')], env=env, check=True)
+    recover_settings(DEST)
     restore_competitors()
     finish_update()
     if registered:
@@ -293,9 +347,6 @@ def main():
         open_preferences()
     elif args.command == 'prefs':
         open_preferences()
-    elif args.command == 'status':
-        info = extension_info()
-        print(json.dumps(info, ensure_ascii=False, indent=2) if info else _('The extension is not registered in the current session.'))
     else:
         globals()[args.command]()
 

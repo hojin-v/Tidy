@@ -11,6 +11,7 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const metadata = JSON.parse(readFileSync(join(root, 'metadata.json'), 'utf8'));
 const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 const catalogs = JSON.parse(readFileSync(join(root, 'lib/translations.json'), 'utf8'));
+const legacyUuid = 'winubun@winubun.local';
 const commands = ['install', 'update', 'uninstall', 'prefs', 'status', 'doctor'];
 
 export function main({args = process.argv.slice(2), env = process.env, platform = process.platform,
@@ -68,8 +69,10 @@ export function main({args = process.argv.slice(2), env = process.env, platform 
             return 0;
         }
     }
-    const installed = join(env.XDG_DATA_HOME || join(homedir(), '.local/share'),
-        'gnome-shell/extensions', metadata.uuid, 'scripts/manage.py');
+    const data = env.XDG_DATA_HOME || join(homedir(), '.local/share');
+    const current = join(data, 'gnome-shell/extensions', metadata.uuid, 'scripts/manage.py');
+    const legacy = join(data, 'gnome-shell/extensions', legacyUuid, 'scripts/manage.py');
+    const installed = existsSync(current) ? current : existsSync(legacy) ? legacy : current;
     if (['prefs', 'status'].includes(command) && !existsSync(installed)) {
         error(_('Tidy is not installed. Run tidy install first.'));
         return 1;

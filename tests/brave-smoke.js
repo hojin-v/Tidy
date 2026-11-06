@@ -11,7 +11,7 @@ export async function run() {
     await Scripting.sleep(1500);
     Main.overview.hide();
     await Scripting.sleep(500);
-    const extension = Extension.lookupByUUID('winubun@winubun.local');
+    const extension = Extension.lookupByUUID('tidy@hnode.dev');
     const assert = (condition, message) => { if (!condition) throw new Error(message); print(`PASS: ${message}`); };
     assert(Boolean(extension?._maximizeHover), 'maximize hover is enabled in the private compositor');
     await testBraveHover(extension, assert);

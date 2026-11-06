@@ -2,7 +2,7 @@
 
 Tidy는 **@hnode/tidy**라는 공개 npm 패키지로 배포합니다. `tidy` CLI, GNOME 확장 ZIP과 macOS 데스크톱 앱 소스를 포함합니다. 루트 패키지에는 런타임 npm 의존성이 없고, macOS의 명시적 `tidy install` 시 별도 사용자 폴더에 고정 버전의 Electron을 설치합니다. 확장 ZIP과 데스크톱 설치에는 GPL 소스와 라이선스 파일을 포함합니다.
 
-현재 배포 준비 버전은 **0.20.1**입니다. macOS 설치·업데이트·제거, 메뉴 막대 선택기, Control+Option 단축키와 Swift Accessibility 창 제어를 포함합니다. GNOME의 남은 공간 선택기는 창별 실시간 미리보기와 제목을 표시하며, 확장 내부 버전은 **23**입니다. Mac의 실제 창 조작은 배포본을 받은 뒤 검증하며, 자동 검사 통과와 구분합니다.
+현재 배포 준비 버전은 **0.20.2**입니다. macOS 설치·업데이트·제거, 메뉴 막대 선택기, Control+Option 단축키와 Swift Accessibility 창 제어를 포함합니다. GNOME의 남은 공간 선택기는 창별 실시간 미리보기와 제목을 표시하며, 확장 UUID는 `tidy@hnode.dev`, 내부 버전은 **24**입니다. 기존 UUID에서 설정을 유지해 이전하며, 설치·업데이트 완료 시 재로그인 필요 여부를 안내합니다. Mac의 실제 창 조작은 배포본을 받은 뒤 검증하며, 자동 검사 통과와 구분합니다.
 
 ## Prepare
 
@@ -15,8 +15,8 @@ npm run check
 npm run test:package
 npm pack --dry-run
 npm pack --pack-destination dist
-node tests/npm-package-smoke.js dist/hnode-tidy-0.20.1.tgz
-sha256sum dist/hnode-tidy-0.20.1.tgz
+node tests/npm-package-smoke.js dist/hnode-tidy-0.20.2.tgz
+sha256sum dist/hnode-tidy-0.20.2.tgz
 ```
 
 `prepack`이 Node.js로 최신 소스의 확장 ZIP을 다시 빌드합니다. GNOME 배포용 tarball은 `glib-compile-schemas`가 있는 Linux에서 빌드해 컴파일한 스키마까지 검증하세요. macOS에서는 GLib 없이 소스 스키마를 포함한 ZIP을 만들 수 있습니다. 공개 파일은 `package.json`의 `files` 목록으로 제한합니다. `desktop/native/macos.swift`, UI와 공통 `lib/layouts.js`가 포함되는지 확인하세요. 로그, 테스트, `.npmrc`, 캐시, `node_modules`는 포함하지 않습니다. npm 패키지 설치 자체는 데스크톱 설정을 바꾸지 않으며 `postinstall`은 사용하지 않습니다.
@@ -37,8 +37,8 @@ TIDY_TEST_UBUNTU_DOCK=1 /usr/bin/python3 scripts/test-shell.py
 ```bash
 npm login --registry=https://registry.npmjs.org/
 npm whoami --registry=https://registry.npmjs.org/
-npm publish ./dist/hnode-tidy-0.20.1.tgz --access public --tag latest
-npm view @hnode/tidy@0.20.1 version os dist.integrity --json
+npm publish ./dist/hnode-tidy-0.20.2.tgz --access public --tag latest
+npm view @hnode/tidy@0.20.2 version os dist.integrity --json
 npm view @hnode/tidy dist-tags --json
 ```
 
@@ -49,16 +49,16 @@ npm이 요청하는 브라우저 로그인·2FA를 완료하세요. 같은 버�
 Node.js 22.12 이상과 Xcode Command Line Tools가 필요합니다. 컴파일러가 없다면 `xcode-select --install`로 설치를 완료한 다음 진행하세요. 게시한 버전을 명시해 이전 `latest`나 전역 설치본과 혼동하지 않도록 합니다.
 
 ```sh
-npx --yes @hnode/tidy@0.20.1 --version
-npx --yes @hnode/tidy@0.20.1 doctor
-npx --yes @hnode/tidy@0.20.1 install
-npx --yes @hnode/tidy@0.20.1 status
+npx --yes @hnode/tidy@0.20.2 --version
+npx --yes @hnode/tidy@0.20.2 doctor
+npx --yes @hnode/tidy@0.20.2 install
+npx --yes @hnode/tidy@0.20.2 status
 ```
 
-첫 명령은 `0.20.1`을 출력해야 합니다. **시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용**에서 Tidy를 허용하세요. 메뉴 막대에서 Tidy를 종료하고 다음 명령으로 다시 실행하면 새 권한을 적용합니다.
+첫 명령은 `0.20.2`를 출력해야 합니다. **시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용**에서 Tidy를 허용하세요. 메뉴 막대에서 Tidy를 종료하고 다음 명령으로 다시 실행하면 새 권한을 적용합니다.
 
 ```sh
-npx --yes @hnode/tidy@0.20.1 prefs
+npx --yes @hnode/tidy@0.20.2 prefs
 ```
 
 TextEdit나 브라우저 같은 일반 창을 선택한 뒤 확인하세요.
@@ -71,11 +71,11 @@ TextEdit나 브라우저 같은 일반 창을 선택한 뒤 확인하세요.
 업데이트와 제거도 같은 공개 버전으로 확인할 수 있습니다.
 
 ```sh
-npx --yes @hnode/tidy@0.20.1 update
-npx --yes @hnode/tidy@0.20.1 uninstall
+npx --yes @hnode/tidy@0.20.2 update
+npx --yes @hnode/tidy@0.20.2 uninstall
 ```
 
-제거 후 앱과 로그인 자동 실행 등록이 없어지고 설정은 보관돼야 합니다. macOS 기본 타일링과 시스템 단축키는 변경하지 않습니다. 실패 시 `sw_vers`, `uname -m`, `node --version`과 `npx --yes @hnode/tidy@0.20.1 status` 결과를 기록하세요. 설치 실패 시 터미널에 출력된 오류도 함께 확인합니다.
+제거 후 앱과 로그인 자동 실행 등록이 없어지고 설정은 보관돼야 합니다. macOS 기본 타일링과 시스템 단축키는 변경하지 않습니다. 실패 시 `sw_vers`, `uname -m`, `node --version`과 `npx --yes @hnode/tidy@0.20.2 status` 결과를 기록하세요. 설치 실패 시 터미널에 출력된 오류도 함께 확인합니다.
 
 ## User commands
 

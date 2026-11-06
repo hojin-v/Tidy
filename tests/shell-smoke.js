@@ -49,8 +49,8 @@ export async function run() {
     await Scripting.sleep(1500);
     Main.overview.hide();
     await Scripting.sleep(500);
-    const extension = Extension.lookupByUUID('winubun@winubun.local');
-    const record = Main.extensionManager.lookup('winubun@winubun.local');
+    const extension = Extension.lookupByUUID('tidy@hnode.dev');
+    const record = Main.extensionManager.lookup('tidy@hnode.dev');
     assert(extension?._tiler && !record.error, `extension enabled (${record.error ?? 'no error'})`);
     assert(extension._bindings.length === 17, 'all 17 Super+Alt keybindings registered');
     const initialPalette = extension._palette;
